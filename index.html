@@ -9,7 +9,7 @@
     body {
       font-family: Tahoma, Arial, sans-serif;
       direction: rtl;
-      background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+      background: linear-gradient(160deg, #0d0d0d 0%, #1a1a1a 60%, #2a2a2a 100%);
       min-height: 100vh;
       padding: 20px 16px 40px;
     }
@@ -51,7 +51,7 @@
       letter-spacing: 2px;
       transition: border-color .2s;
     }
-    #idInput:focus { border-color: #2e7d32; }
+    #idInput:focus { border-color: #555; }
     #searchBtn {
       width: 100%;
       margin-top: 12px;
@@ -59,14 +59,14 @@
       font-size: 17px;
       font-family: inherit;
       font-weight: bold;
-      background: #2e7d32;
+      background: #222;
       color: #fff;
       border: none;
       border-radius: 10px;
       cursor: pointer;
       transition: background .2s, opacity .2s;
     }
-    #searchBtn:hover:not(:disabled) { background: #1b5e20; }
+    #searchBtn:hover:not(:disabled) { background: #000; }
     #searchBtn:disabled { opacity: .6; cursor: default; }
     .error-text {
       color: #c62828;
@@ -97,7 +97,7 @@
     .company-name { font-size: 13px; color: #888; margin-bottom: 3px; }
     .card-title { font-size: 17px; font-weight: bold; color: #222; }
 
-    .greeting { font-size: 16px; font-weight: bold; color: #1b5e20; margin-bottom: 10px; }
+    .greeting { font-size: 16px; font-weight: bold; color: #222; margin-bottom: 10px; }
     .intro     { font-size: 14px; color: #444; margin-bottom: 14px; }
 
     .info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
@@ -177,10 +177,6 @@
     }
     .btn-save:hover { background: #0d47a1; }
 
-    /* Admin link */
-    .admin-link { text-align: center; margin-top: 22px; }
-    .admin-link a { color: rgba(255,255,255,.35); font-size: 12px; text-decoration: none; }
-    .admin-link a:hover { color: rgba(255,255,255,.6); }
   </style>
 </head>
 <body>
@@ -200,7 +196,6 @@
 
   <div id="resultArea"></div>
 
-  <div class="admin-link"><a href="admin/">لوحة التحكم</a></div>
 </div>
 
 <!-- Libraries -->
