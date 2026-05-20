@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>استعلام رحلة الحج 1447هـ - حملة الحج</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      direction: rtl;
+      background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+      min-height: 100vh;
+      padding: 20px 16px 40px;
+    }
+    .container { max-width: 580px; margin: 0 auto; }
+
+    /* Header */
+    .header {
+      text-align: center;
+      color: #fff;
+      padding: 28px 0 22px;
+    }
+    .header-icon { font-size: 48px; margin-bottom: 8px; }
+    .header h1 { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
+    .header p  { font-size: 15px; opacity: .88; }
+
+    /* Search box */
+    .search-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.22);
+    }
+    .search-label {
+      display: block;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    #idInput {
+      width: 100%;
+      padding: 14px;
+      font-size: 20px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      text-align: center;
+      font-family: inherit;
+      outline: none;
+      letter-spacing: 2px;
+      transition: border-color .2s;
+    }
+    #idInput:focus { border-color: #2e7d32; }
+    #searchBtn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 14px;
+      font-size: 17px;
+      font-family: inherit;
+      font-weight: bold;
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .2s, opacity .2s;
+    }
+    #searchBtn:hover:not(:disabled) { background: #1b5e20; }
+    #searchBtn:disabled { opacity: .6; cursor: default; }
+    .error-text {
+      color: #c62828;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    /* Result card */
+    .result-card {
+      border-radius: 18px;
+      padding: 22px;
+      margin-top: 18px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.18);
+      background: #fff;
+    }
+    .flight-SV8035 { border-right: 6px solid #F9A825; background: #FFFDE7; }
+    .flight-SV8037 { border-right: 6px solid #558B2F; background: #F1F8E9; }
+    .flight-SV8057 { border-right: 6px solid #C62828; background: #FFF3F3; }
+
+    .card-header {
+      text-align: center;
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(0,0,0,.09);
+    }
+    .company-name { font-size: 13px; color: #888; margin-bottom: 3px; }
+    .card-title { font-size: 17px; font-weight: bold; color: #222; }
+
+    .greeting { font-size: 16px; font-weight: bold; color: #1b5e20; margin-bottom: 10px; }
+    .intro     { font-size: 14px; color: #444; margin-bottom: 14px; }
+
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    .info-table td {
+      padding: 7px 4px;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      vertical-align: top;
+    }
+    .info-table td:first-child {
+      font-weight: bold;
+      color: #333;
+      white-space: nowrap;
+      width: 120px;
+    }
+    .info-table td:last-child { color: #222; }
+
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1565c0;
+      text-decoration: none;
+      font-size: 14px;
+      margin: 10px 0;
+      padding: 6px 12px;
+      border: 1px solid #1565c0;
+      border-radius: 8px;
+      transition: background .15s;
+    }
+    .map-link:hover { background: #e3f2fd; }
+
+    .notes-section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0,0,0,.09);
+    }
+    .notes-title { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #333; }
+    .note-item { font-size: 14px; color: #444; margin: 5px 0; line-height: 1.6; }
+
+    /* Share buttons */
+    .share-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .btn-whatsapp {
+      flex: 2;
+      padding: 13px 10px;
+      background: #25D366;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .2s;
+    }
+    .btn-whatsapp:hover { background: #1eba59; }
+    .btn-save {
+      flex: 1;
+      padding: 13px 10px;
+      background: #1565c0;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-save:hover { background: #0d47a1; }
+
+    /* Admin link */
+    .admin-link { text-align: center; margin-top: 22px; }
+    .admin-link a { color: rgba(255,255,255,.35); font-size: 12px; text-decoration: none; }
+    .admin-link a:hover { color: rgba(255,255,255,.6); }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-icon">🕋</div>
+    <h1>استعلام رحلة الحج 1447هـ</h1>
+    <p>حملة الحج</p>
+  </div>
+
+  <div class="search-box">
+    <label class="search-label">أدخل رقم هويتك للاستعلام عن تفاصيل رحلتك</label>
+    <input type="text" id="idInput" placeholder="رقم الهوية" inputmode="numeric" autocomplete="off" />
+    <button id="searchBtn">🔍&nbsp; بحث</button>
+    <div id="errorMessage" class="error-text"></div>
+  </div>
+
+  <div id="resultArea"></div>
+
+  <div class="admin-link"><a href="admin/">لوحة التحكم</a></div>
+</div>
+
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<!-- Firebase 10 compat -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+// ================================================================
+// FIREBASE CONFIG — أضف إعدادات مشروعك هنا
+// ================================================================
+const firebaseConfig = {
+  apiKey:            "REPLACE_API_KEY",
+  authDomain:        "REPLACE_AUTH_DOMAIN",
+  projectId:         "REPLACE_PROJECT_ID",
+  storageBucket:     "REPLACE_STORAGE_BUCKET",
+  messagingSenderId: "REPLACE_SENDER_ID",
+  appId:             "REPLACE_APP_ID"
+};
+// ================================================================
+
+let db = null;
+try {
+  if (!firebaseConfig.apiKey.startsWith("REPLACE")) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  }
+} catch (e) { console.warn("Firebase:", e); }
+
+// ================================================================
+// Messages per flight
+// ================================================================
+const FLIGHTS = {
+  SV8035: {
+    color: "SV8035",
+    details: {
+      "رقم الرحلة":     "SV8035",
+      "المغادرة من":    "الرياض",
+      "الوصول إلى":     "جدة",
+      "تاريخ المغادرة": "7 ذو الحجة 1447هـ",
+      "وقت المغادرة":   "16:20 (4:20م عصراً)",
+      "الصالة":         "مطار الملك خالد — صالة رقم 3",
+      "بوابة الدخول":   "بوابة رقم (3)",
+      "كاونترات الصعود":"من (321) إلى (335)",
+    },
+    arrivalTime: "1:20م",
+    notes: [
+      "فضلاً التواجد بالمطار الساعة <strong>1:20م</strong>",
+      "كاونتر (336) مخصص لذوي الاحتياجات الخاصة",
+      "عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود",
+      "سيتم دفع الهدي لكل الحجاج من قبل الحملة"
+    ],
+    plainText: (name, gender) =>
+`${gender === 'انثى' ? 'أختي الحاجة' : 'أخي الحاج'} / ${name}
+
+نود إبلاغكم بموعد إقلاع رحلتكم:
+رحلة رقم: SV8035
+المغادرة من: الرياض
+الوصول إلى: جدة
+تاريخ المغادرة: 7 ذو الحجة 1447هـ
+وقت المغادرة: 16:20 (4:20م عصراً)
+عبر صالات مطار الملك خالد بمدينة الرياض (صالة رقم 3)
+الدخول من بوابة رقم (3)
+كاونتر إصدار بطاقة صعود الطائرة من (321) إلى (335)
+
+📍 خريطة الموقع: https://maps.app.goo.gl/dp23DpdcXa3aAFmD8
+
+تنويه:
+• فضلاً التواجد بالمطار الساعة 1:20م
+• كاونتر (336) مخصص لذوي الاحتياجات الخاصة
+• عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود
+• سيتم دفع الهدي لكل الحجاج من قبل الحملة`
+  },
+
+  SV8037: {
+    color: "SV8037",
+    details: {
+      "رقم الرحلة":     "SV8037",
+      "المغادرة من":    "الرياض",
+      "الوصول إلى":     "جدة",
+      "تاريخ المغادرة": "7 ذو الحجة 1447هـ",
+      "وقت المغادرة":   "16:50 (4:50م عصراً)",
+      "الصالة":         "مطار الملك خالد — صالة رقم 3",
+      "بوابة الدخول":   "بوابة رقم (3)",
+      "كاونترات الصعود":"من (321) إلى (335)",
+    },
+    notes: [
+      "فضلاً التواجد بالمطار الساعة <strong>1:50م</strong>",
+      "كاونتر (336) مخصص لذوي الاحتياجات الخاصة",
+      "عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود",
+      "سيتم دفع الهدي لكل الحجاج من قبل الحملة"
+    ],
+    plainText: (name, gender) =>
+`${gender === 'انثى' ? 'أختي الحاجة' : 'أخي الحاج'} / ${name}
+
+نود إبلاغكم بموعد إقلاع رحلتكم:
+رحلة رقم: SV8037
+المغادرة من: الرياض
+الوصول إلى: جدة
+تاريخ المغادرة: 7 ذو الحجة 1447هـ
+وقت المغادرة: 16:50 (4:50م عصراً)
+عبر صالات مطار الملك خالد بمدينة الرياض (صالة رقم 3)
+الدخول من بوابة رقم (3)
+كاونتر إصدار بطاقة صعود الطائرة من (321) إلى (335)
+
+📍 خريطة الموقع: https://maps.app.goo.gl/dp23DpdcXa3aAFmD8
+
+تنويه:
+• فضلاً التواجد بالمطار الساعة 1:50م
+• كاونتر (336) مخصص لذوي الاحتياجات الخاصة
+• عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود
+• سيتم دفع الهدي لكل الحجاج من قبل الحملة`
+  },
+
+  SV8057: {
+    color: "SV8057",
+    details: {
+      "رقم الرحلة":     "SV8057",
+      "المغادرة من":    "الرياض",
+      "الوصول إلى":     "جدة",
+      "تاريخ المغادرة": "8 ذو الحجة 1447هـ",
+      "وقت المغادرة":   "06:00 صباحاً",
+      "الصالة":         "مطار الملك خالد — صالة رقم 3",
+      "بوابة الدخول":   "بوابة رقم (3)",
+      "كاونترات الصعود":"من (321) إلى (335)",
+    },
+    notes: [
+      "فضلاً التواجد بالمطار الساعة <strong>3:00 صباحاً</strong>",
+      "كاونتر (336) مخصص لذوي الاحتياجات الخاصة",
+      "عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود",
+      "سيتم دفع الهدي لكل الحجاج من قبل الحملة"
+    ],
+    plainText: (name, gender) =>
+`${gender === 'انثى' ? 'أختي الحاجة' : 'أخي الحاج'} / ${name}
+
+نود إبلاغكم بموعد إقلاع رحلتكم:
+رحلة رقم: SV8057
+المغادرة من: الرياض
+الوصول إلى: جدة
+تاريخ المغادرة: 8 ذو الحجة 1447هـ
+وقت المغادرة: 06:00 صباحاً
+عبر صالات مطار الملك خالد بمدينة الرياض (صالة رقم 3)
+الدخول من بوابة رقم (3)
+كاونتر إصدار بطاقة صعود الطائرة من (321) إلى (335)
+
+📍 خريطة الموقع: https://maps.app.goo.gl/dp23DpdcXa3aAFmD8
+
+تنويه:
+• فضلاً التواجد بالمطار الساعة 3:00 صباحاً
+• كاونتر (336) مخصص لذوي الاحتياجات الخاصة
+• عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود
+• سيتم دفع الهدي لكل الحجاج من قبل الحملة`
+  }
+};
+
+// ================================================================
+const resultArea = document.getElementById("resultArea");
+const searchBtn  = document.getElementById("searchBtn");
+const idInput    = document.getElementById("idInput");
+const errorDiv   = document.getElementById("errorMessage");
+
+let currentRecord = null;
+
+function doSearch() {
+  const idValue = idInput.value.trim();
+  errorDiv.textContent = "";
+  resultArea.innerHTML = "";
+  currentRecord = null;
+
+  if (!idValue) {
+    errorDiv.textContent = "الرجاء إدخال رقم الهوية أولاً.";
+    return;
+  }
+
+  searchBtn.disabled = true;
+  searchBtn.textContent = "جاري البحث…";
+
+  Papa.parse("data/hajj-data.csv", {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      searchBtn.disabled = false;
+      searchBtn.innerHTML = "🔍&nbsp; بحث";
+
+      const found = results.data.find(r => String(r.id).trim() === idValue);
+      if (!found) {
+        errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
+        return;
+      }
+
+      const name   = found.name   || "";
+      const gender = found.gender || "";
+      const flight = (found.flight || "").trim().replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+
+      if (!FLIGHTS[flight]) {
+        errorDiv.textContent = `تنبيه: الرحلة "${found.flight}" غير مدعومة.`;
+        return;
+      }
+
+      currentRecord = { ...found, flightKey: flight };
+      renderCard(name, gender, flight);
+      logSearch(idValue, name, gender, flight);
+    },
+    error: () => {
+      searchBtn.disabled = false;
+      searchBtn.innerHTML = "🔍&nbsp; بحث";
+      errorDiv.textContent = "حدث خطأ أثناء قراءة ملف البيانات.";
+    }
+  });
+}
+
+function renderCard(name, gender, flight) {
+  const cfg     = FLIGHTS[flight];
+  const greeting = gender === "انثى" ? "أختي الحاجة" : "أخي الحاج";
+  const detailRows = Object.entries(cfg.details).map(([k, v]) =>
+    `<tr><td>${k}</td><td>${v}</td></tr>`
+  ).join("");
+  const noteItems = cfg.notes.map(n =>
+    `<div class="note-item">• ${n}</div>`
+  ).join("");
+
+  resultArea.innerHTML = `
+    <div class="result-card flight-${cfg.color}" id="captureTarget">
+      <div class="card-header">
+        <div class="company-name">حملة الحج 1447هـ</div>
+        <div class="card-title">تفاصيل رحلة الحج</div>
+      </div>
+      <div class="greeting">${greeting} / ${name}</div>
+      <div class="intro">نود إبلاغكم بموعد إقلاع رحلتكم:</div>
+      <table class="info-table">${detailRows}</table>
+      <a href="https://maps.app.goo.gl/dp23DpdcXa3aAFmD8" target="_blank" rel="noopener" class="map-link">
+        📍 خريطة موقع المطار
+      </a>
+      <div class="notes-section">
+        <div class="notes-title">تنويه:</div>
+        ${noteItems}
+      </div>
+    </div>
+    <div class="share-buttons">
+      <button class="btn-whatsapp" onclick="shareWhatsApp()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        مشاركة واتساب
+      </button>
+      <button class="btn-save" onclick="saveAsImage()">💾 حفظ صورة</button>
+    </div>
+  `;
+
+  resultArea.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function shareWhatsApp() {
+  if (!currentRecord) return;
+  const { name, gender, flightKey } = currentRecord;
+  const text = FLIGHTS[flightKey].plainText(name, gender);
+  window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+}
+
+function saveAsImage() {
+  const target = document.getElementById("captureTarget");
+  if (!target) return;
+  const btn = event.target;
+  btn.textContent = "جاري الحفظ…";
+  btn.disabled = true;
+  html2canvas(target, { scale: 2.5, useCORS: true, logging: false }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = `رحلة-الحج-1447-${currentRecord.flightKey}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    btn.textContent = "💾 حفظ صورة";
+    btn.disabled = false;
+  }).catch(() => {
+    btn.textContent = "💾 حفظ صورة";
+    btn.disabled = false;
+  });
+}
+
+function logSearch(id, name, gender, flight) {
+  if (!db) return;
+  const ref = db.collection("searches").doc(id);
+  ref.get().then(doc => {
+    if (doc.exists) {
+      ref.update({
+        lastSearch: firebase.firestore.FieldValue.serverTimestamp(),
+        count: firebase.firestore.FieldValue.increment(1)
+      });
+    } else {
+      ref.set({
+        id, name, gender, flight,
+        firstSearch: firebase.firestore.FieldValue.serverTimestamp(),
+        lastSearch:  firebase.firestore.FieldValue.serverTimestamp(),
+        count: 1
+      });
+    }
+  }).catch(console.error);
+}
+
+searchBtn.addEventListener("click", doSearch);
+idInput.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
+</script>
+</body>
+</html>

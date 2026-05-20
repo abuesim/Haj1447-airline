@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحكم — حملة الحج 1447هـ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, Arial, sans-serif; direction: rtl; background: #f0f2f5; min-height: 100vh; }
+
+    /* ── Password screen ── */
+    .pass-screen {
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+      background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+    }
+    .pass-box {
+      background: #fff; border-radius: 18px; padding: 40px 36px;
+      width: 340px; box-shadow: 0 12px 40px rgba(0,0,0,.25); text-align: center;
+    }
+    .pass-box .icon { font-size: 44px; margin-bottom: 12px; }
+    .pass-box h2 { font-size: 20px; color: #1a1a1a; margin-bottom: 6px; }
+    .pass-box p  { color: #888; font-size: 13px; margin-bottom: 22px; }
+    .pass-box input {
+      width: 100%; padding: 13px; font-size: 16px; text-align: center;
+      border: 2px solid #ddd; border-radius: 10px; font-family: inherit; outline: none;
+      transition: border-color .2s;
+    }
+    .pass-box input:focus { border-color: #2e7d32; }
+    .pass-box button {
+      width: 100%; margin-top: 12px; padding: 13px; font-size: 16px; font-family: inherit;
+      font-weight: bold; background: #2e7d32; color: #fff; border: none;
+      border-radius: 10px; cursor: pointer; transition: background .2s;
+    }
+    .pass-box button:hover { background: #1b5e20; }
+    .pass-error { color: #c62828; margin-top: 10px; font-size: 14px; }
+
+    /* ── Dashboard ── */
+    .dashboard { display: none; }
+
+    .topbar {
+      background: #1b5e20; color: #fff; padding: 14px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .topbar h1 { font-size: 17px; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-refresh, .btn-logout {
+      padding: 7px 16px; border-radius: 7px; border: none;
+      cursor: pointer; font-family: inherit; font-size: 14px;
+    }
+    .btn-refresh { background: rgba(255,255,255,.2); color: #fff; }
+    .btn-refresh:hover { background: rgba(255,255,255,.3); }
+    .btn-logout  { background: #c62828; color: #fff; }
+    .btn-logout:hover { background: #b71c1c; }
+
+    .content { padding: 20px; max-width: 1060px; margin: 0 auto; }
+
+    /* ── Stat cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media(max-width:700px){ .stats-grid { grid-template-columns: repeat(2,1fr); } }
+    .stat-card {
+      background: #fff; border-radius: 14px; padding: 20px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07); text-align: center;
+    }
+    .stat-num   { font-size: 38px; font-weight: bold; line-height: 1; margin-bottom: 6px; }
+    .stat-label { font-size: 13px; color: #777; }
+    .c-blue   .stat-num { color: #1565c0; }
+    .c-green  .stat-num { color: #2e7d32; }
+    .c-orange .stat-num { color: #e65100; }
+    .c-purple .stat-num { color: #6a1b9a; }
+
+    /* ── Progress ── */
+    .progress-card {
+      background: #fff; border-radius: 14px; padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 20px;
+    }
+    .section-title { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 14px; }
+    .progress-bg { background: #e0e0e0; border-radius: 8px; height: 22px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 8px;
+      background: linear-gradient(90deg, #1b5e20, #66bb6a);
+      transition: width .6s ease;
+    }
+    .progress-label { margin-top: 8px; font-size: 13px; color: #555; text-align: left; }
+
+    /* ── Flight breakdown ── */
+    .flights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media(max-width:600px){ .flights-grid { grid-template-columns: 1fr; } }
+    .flight-card {
+      background: #fff; border-radius: 14px; padding: 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+    }
+    .flight-card.f8035 { border-right: 5px solid #F9A825; }
+    .flight-card.f8037 { border-right: 5px solid #558B2F; }
+    .flight-card.f8057 { border-right: 5px solid #C62828; }
+    .fc-name { font-size: 15px; font-weight: bold; margin-bottom: 10px; }
+    .fc-row  { font-size: 13px; color: #555; margin: 4px 0; }
+    .fc-num  { font-weight: bold; color: #222; }
+    .mini-bar-bg   { background: #eee; border-radius: 4px; height: 8px; margin-top: 10px; overflow: hidden; }
+    .mini-bar-fill { height: 100%; border-radius: 4px; transition: width .5s; }
+    .f8035 .mini-bar-fill { background: #F9A825; }
+    .f8037 .mini-bar-fill { background: #558B2F; }
+    .f8057 .mini-bar-fill { background: #C62828; }
+
+    /* ── Table ── */
+    .table-card {
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow: hidden;
+    }
+    .table-top {
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .table-top span { font-size: 15px; font-weight: bold; color: #333; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: #f8f8f8; padding: 11px 14px; text-align: right;
+      font-weight: bold; color: #555; border-bottom: 1px solid #eee;
+      white-space: nowrap;
+    }
+    td { padding: 11px 14px; border-bottom: 1px solid #f5f5f5; color: #333; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 12px;
+      font-size: 12px; font-weight: bold;
+    }
+    .b8035 { background: #FFF9C4; color: #795548; }
+    .b8037 { background: #DCEDC8; color: #2e7d32; }
+    .b8057 { background: #FFCDD2; color: #c62828; }
+
+    .loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+    /* last-updated */
+    #lastUpdated { font-size: 12px; color: rgba(255,255,255,.5); }
+  </style>
+</head>
+<body>
+
+<!-- ══ Password screen ══ -->
+<div class="pass-screen" id="passScreen">
+  <div class="pass-box">
+    <div class="icon">🔐</div>
+    <h2>لوحة التحكم</h2>
+    <p>حملة الحج 1447هـ</p>
+    <input type="password" id="passInput" placeholder="كلمة المرور" autocomplete="off" />
+    <button onclick="checkPass()">دخول</button>
+    <div class="pass-error" id="passError"></div>
+  </div>
+</div>
+
+<!-- ══ Dashboard ══ -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <h1>🕋 لوحة تحكم حملة الحج 1447هـ</h1>
+    <div class="topbar-actions">
+      <span id="lastUpdated"></span>
+      <button class="btn-refresh" onclick="loadData()">🔄 تحديث</button>
+      <button class="btn-logout"  onclick="logout()">خروج</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
+        <div class="stat-num">1021</div>
+        <div class="stat-label">إجمالي الحجاج</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-num" id="sSearched">—</div>
+        <div class="stat-label">استفسروا عن رحلاتهم</div>
+      </div>
+      <div class="stat-card c-orange">
+        <div class="stat-num" id="sRemaining">—</div>
+        <div class="stat-label">لم يستفسروا بعد</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-num" id="sPercent">—</div>
+        <div class="stat-label">نسبة التفاعل</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-card">
+      <div class="section-title">نسبة الاستفسار الكلية</div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">جاري التحميل…</div>
+    </div>
+
+    <!-- Flight breakdown -->
+    <div class="flights-grid">
+      <div class="flight-card f8035">
+        <div class="fc-name">✈️ SV8035 — 7 ذو الحجة (4:20م)</div>
+        <div class="fc-row">إجمالي: <span class="fc-num">339</span> حاج</div>
+        <div class="fc-row">استفسروا: <span class="fc-num" id="n8035">—</span></div>
+        <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8035">—</span></div>
+        <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8035" style="width:0%"></div></div>
+      </div>
+      <div class="flight-card f8037">
+        <div class="fc-name">✈️ SV8037 — 7 ذو الحجة (4:50م)</div>
+        <div class="fc-row">إجمالي: <span class="fc-num">328</span> حاج</div>
+        <div class="fc-row">استفسروا: <span class="fc-num" id="n8037">—</span></div>
+        <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8037">—</span></div>
+        <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8037" style="width:0%"></div></div>
+      </div>
+      <div class="flight-card f8057">
+        <div class="fc-name">✈️ SV8057 — 8 ذو الحجة (6:00ص)</div>
+        <div class="fc-row">إجمالي: <span class="fc-num">354</span> حاج</div>
+        <div class="fc-row">استفسروا: <span class="fc-num" id="n8057">—</span></div>
+        <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8057">—</span></div>
+        <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8057" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Search log table -->
+    <div class="table-card">
+      <div class="table-top">
+        <span>سجل الاستفسارات</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الاسم</th>
+              <th>رقم الهوية</th>
+              <th>الجنس</th>
+              <th>الرحلة</th>
+              <th>أول استفسار</th>
+              <th>آخر استفسار</th>
+              <th>عدد المرات</th>
+            </tr>
+          </thead>
+          <tbody id="searchTable">
+            <tr><td colspan="8" class="loading">جاري تحميل البيانات…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase 10 compat -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+// ================================================================
+// FIREBASE CONFIG — نفس إعدادات index.html
+// ================================================================
+const firebaseConfig = {
+  apiKey:            "REPLACE_API_KEY",
+  authDomain:        "REPLACE_AUTH_DOMAIN",
+  projectId:         "REPLACE_PROJECT_ID",
+  storageBucket:     "REPLACE_STORAGE_BUCKET",
+  messagingSenderId: "REPLACE_SENDER_ID",
+  appId:             "REPLACE_APP_ID"
+};
+// ================================================================
+
+// كلمة مرور لوحة التحكم — يمكن تغييرها هنا
+const ADMIN_PASSWORD = "Admin@1447";
+
+const TOTAL      = 1021;
+const TOTALS     = { SV8035: 339, SV8037: 328, SV8057: 354 };
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── Auth ─────────────────────────────────────────────────────────
+function checkPass() {
+  const v = document.getElementById("passInput").value;
+  if (v === ADMIN_PASSWORD) {
+    sessionStorage.setItem("haj_admin", "1");
+    showDashboard();
+  } else {
+    document.getElementById("passError").textContent = "كلمة المرور غير صحيحة.";
+  }
+}
+document.getElementById("passInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") checkPass();
+});
+
+function logout() {
+  sessionStorage.removeItem("haj_admin");
+  location.reload();
+}
+
+function showDashboard() {
+  document.getElementById("passScreen").style.display  = "none";
+  document.getElementById("dashboard").style.display   = "block";
+  loadData();
+}
+
+if (sessionStorage.getItem("haj_admin") === "1") showDashboard();
+
+// ── Load data ────────────────────────────────────────────────────
+function loadData() {
+  document.getElementById("searchTable").innerHTML =
+    '<tr><td colspan="8" class="loading">جاري التحميل…</td></tr>';
+
+  db.collection("searches").orderBy("lastSearch", "desc").get()
+    .then(snap => {
+      const docs = [];
+      snap.forEach(d => docs.push(d.data()));
+      renderStats(docs);
+      renderTable(docs);
+
+      const now = new Date().toLocaleTimeString("ar-SA");
+      document.getElementById("lastUpdated").textContent = `آخر تحديث: ${now}`;
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById("searchTable").innerHTML =
+        '<tr><td colspan="8" class="loading">حدث خطأ في تحميل البيانات. تأكد من إعداد Firebase.</td></tr>';
+    });
+}
+
+function renderStats(docs) {
+  const searched  = docs.length;
+  const remaining = TOTAL - searched;
+  const pct       = Math.round((searched / TOTAL) * 100);
+
+  document.getElementById("sSearched").textContent  = searched;
+  document.getElementById("sRemaining").textContent = remaining;
+  document.getElementById("sPercent").textContent   = pct + "%";
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent =
+    `${searched} من ${TOTAL} حاج استفسروا عن رحلاتهم (${pct}%)`;
+
+  const keys = ["SV8035","SV8037","SV8057"];
+  const ids  = ["8035","8037","8057"];
+  keys.forEach((k, i) => {
+    const n = docs.filter(d => d.flight === k).length;
+    const t = TOTALS[k];
+    const p = Math.round((n / t) * 100);
+    document.getElementById(`n${ids[i]}`).textContent = n;
+    document.getElementById(`r${ids[i]}`).textContent = t - n;
+    document.getElementById(`b${ids[i]}`).style.width = p + "%";
+  });
+}
+
+function renderTable(docs) {
+  if (docs.length === 0) {
+    document.getElementById("searchTable").innerHTML =
+      '<tr><td colspan="8" class="loading">لا توجد استفسارات بعد.</td></tr>';
+    return;
+  }
+
+  const flightBadge = { SV8035: "b8035", SV8037: "b8037", SV8057: "b8057" };
+  const rows = docs.map((d, i) => {
+    const bc = flightBadge[d.flight] || "";
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${esc(d.name)}</td>
+      <td>${esc(d.id)}</td>
+      <td>${d.gender === "انثى" ? "أنثى" : "ذكر"}</td>
+      <td><span class="badge ${bc}">${esc(d.flight)}</span></td>
+      <td>${fmtDate(d.firstSearch)}</td>
+      <td>${fmtDate(d.lastSearch)}</td>
+      <td>${d.count || 1}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("searchTable").innerHTML = rows;
+}
+
+function fmtDate(ts) {
+  if (!ts) return "—";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString("ar-SA", {
+    year: "numeric", month: "short", day: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
+}
+
+function esc(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+</script>
+</body>
+</html>
