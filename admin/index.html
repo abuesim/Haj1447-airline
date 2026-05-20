@@ -18,8 +18,8 @@
       width: 340px; box-shadow: 0 12px 40px rgba(0,0,0,.25); text-align: center;
     }
     .pass-box .icon { font-size: 44px; margin-bottom: 12px; }
-    .pass-box h2 { font-size: 20px; color: #1a1a1a; margin-bottom: 6px; }
-    .pass-box p  { color: #888; font-size: 13px; margin-bottom: 22px; }
+    .pass-box h2   { font-size: 20px; color: #1a1a1a; margin-bottom: 6px; }
+    .pass-box p    { color: #888; font-size: 13px; margin-bottom: 22px; }
     .pass-box input {
       width: 100%; padding: 13px; font-size: 16px; text-align: center;
       border: 2px solid #ddd; border-radius: 10px; font-family: inherit; outline: none;
@@ -44,23 +44,20 @@
     }
     .topbar h1 { font-size: 17px; }
     .topbar-actions { display: flex; gap: 10px; align-items: center; }
-    .btn-refresh, .btn-logout {
+    .btn-icon {
       padding: 7px 16px; border-radius: 7px; border: none;
       cursor: pointer; font-family: inherit; font-size: 14px;
     }
     .btn-refresh { background: rgba(255,255,255,.2); color: #fff; }
     .btn-refresh:hover { background: rgba(255,255,255,.3); }
     .btn-logout  { background: #c62828; color: #fff; }
-    .btn-logout:hover { background: #b71c1c; }
+    .btn-logout:hover  { background: #b71c1c; }
 
-    .content { padding: 20px; max-width: 1060px; margin: 0 auto; }
+    .content { padding: 20px; max-width: 1100px; margin: 0 auto; }
 
     /* ── Stat cards ── */
     .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px;
     }
     @media(max-width:700px){ .stats-grid { grid-template-columns: repeat(2,1fr); } }
     .stat-card {
@@ -83,17 +80,13 @@
     .progress-bg { background: #e0e0e0; border-radius: 8px; height: 22px; overflow: hidden; }
     .progress-fill {
       height: 100%; border-radius: 8px;
-      background: linear-gradient(90deg, #1b5e20, #66bb6a);
-      transition: width .6s ease;
+      background: linear-gradient(90deg, #1b5e20, #66bb6a); transition: width .6s ease;
     }
     .progress-label { margin-top: 8px; font-size: 13px; color: #555; text-align: left; }
 
     /* ── Flight breakdown ── */
     .flights-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 20px;
     }
     @media(max-width:600px){ .flights-grid { grid-template-columns: 1fr; } }
     .flight-card {
@@ -112,26 +105,67 @@
     .f8037 .mini-bar-fill { background: #558B2F; }
     .f8057 .mini-bar-fill { background: #C62828; }
 
+    /* ── Filter bar ── */
+    .filter-card {
+      background: #fff; border-radius: 14px; padding: 16px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 16px;
+    }
+    .filter-row {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    .filter-row label { font-size: 13px; color: #555; white-space: nowrap; }
+    .filter-row input[type=text] {
+      flex: 1; min-width: 160px; padding: 9px 12px; font-size: 14px; font-family: inherit;
+      border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border-color .2s;
+    }
+    .filter-row input[type=text]:focus { border-color: #2e7d32; }
+    .filter-row select {
+      padding: 9px 10px; font-size: 14px; font-family: inherit;
+      border: 2px solid #ddd; border-radius: 8px; outline: none; background: #fff;
+      cursor: pointer; transition: border-color .2s;
+    }
+    .filter-row select:focus { border-color: #2e7d32; }
+    .filter-count {
+      font-size: 13px; color: #888; white-space: nowrap; margin-right: auto;
+    }
+
+    /* ── Export buttons ── */
+    .export-row {
+      display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .btn-export {
+      padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer;
+      font-family: inherit; font-size: 14px; font-weight: bold; transition: background .2s;
+    }
+    .btn-export-all   { background: #1565c0; color: #fff; }
+    .btn-export-all:hover   { background: #0d47a1; }
+    .btn-export-noshow { background: #e65100; color: #fff; }
+    .btn-export-noshow:hover { background: #bf360c; }
+    .btn-export-view  { background: #558B2F; color: #fff; }
+    .btn-export-view:hover  { background: #33691e; }
+
     /* ── Table ── */
     .table-card {
       background: #fff; border-radius: 14px;
       box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow: hidden;
     }
     .table-top {
-      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+      padding: 14px 20px; border-bottom: 1px solid #f0f0f0;
       display: flex; justify-content: space-between; align-items: center;
     }
     .table-top span { font-size: 15px; font-weight: bold; color: #333; }
-    .table-wrap { overflow-x: auto; }
+    .table-wrap { overflow-x: auto; max-height: 600px; overflow-y: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th {
-      background: #f8f8f8; padding: 11px 14px; text-align: right;
-      font-weight: bold; color: #555; border-bottom: 1px solid #eee;
-      white-space: nowrap;
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      background: #f8f8f8; padding: 11px 12px; text-align: right;
+      font-weight: bold; color: #555; border-bottom: 2px solid #eee; white-space: nowrap;
     }
-    td { padding: 11px 14px; border-bottom: 1px solid #f5f5f5; color: #333; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f5f5f5; color: #333; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #fafafa; }
+    tr.row-noshow td { background: #fff8f0; }
+    tr.row-noshow:hover td { background: #fff3e0; }
 
     .badge {
       display: inline-block; padding: 3px 10px; border-radius: 12px;
@@ -140,10 +174,10 @@
     .b8035 { background: #FFF9C4; color: #795548; }
     .b8037 { background: #DCEDC8; color: #2e7d32; }
     .b8057 { background: #FFCDD2; color: #c62828; }
+    .b-searched { background: #E8F5E9; color: #2e7d32; }
+    .b-noshow   { background: #FFF3E0; color: #e65100; }
 
     .loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
-
-    /* last-updated */
     #lastUpdated { font-size: 12px; color: rgba(255,255,255,.5); }
   </style>
 </head>
@@ -167,12 +201,13 @@
     <h1>🕋 لوحة تحكم حملة الحج 1447هـ</h1>
     <div class="topbar-actions">
       <span id="lastUpdated"></span>
-      <button class="btn-refresh" onclick="loadData()">🔄 تحديث</button>
-      <button class="btn-logout"  onclick="logout()">خروج</button>
+      <button class="btn-icon btn-refresh" onclick="loadData()">🔄 تحديث</button>
+      <button class="btn-icon btn-logout"  onclick="logout()">خروج</button>
     </div>
   </div>
 
   <div class="content">
+
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card c-blue">
@@ -206,31 +241,62 @@
     <div class="flights-grid">
       <div class="flight-card f8035">
         <div class="fc-name">✈️ SV8035 — 7 ذو الحجة (4:20م)</div>
-        <div class="fc-row">إجمالي: <span class="fc-num">339</span> حاج</div>
+        <div class="fc-row">إجمالي: <span class="fc-num">339</span></div>
         <div class="fc-row">استفسروا: <span class="fc-num" id="n8035">—</span></div>
         <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8035">—</span></div>
         <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8035" style="width:0%"></div></div>
       </div>
       <div class="flight-card f8037">
         <div class="fc-name">✈️ SV8037 — 7 ذو الحجة (4:50م)</div>
-        <div class="fc-row">إجمالي: <span class="fc-num">328</span> حاج</div>
+        <div class="fc-row">إجمالي: <span class="fc-num">328</span></div>
         <div class="fc-row">استفسروا: <span class="fc-num" id="n8037">—</span></div>
         <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8037">—</span></div>
         <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8037" style="width:0%"></div></div>
       </div>
       <div class="flight-card f8057">
         <div class="fc-name">✈️ SV8057 — 8 ذو الحجة (6:00ص)</div>
-        <div class="fc-row">إجمالي: <span class="fc-num">354</span> حاج</div>
+        <div class="fc-row">إجمالي: <span class="fc-num">354</span></div>
         <div class="fc-row">استفسروا: <span class="fc-num" id="n8057">—</span></div>
         <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8057">—</span></div>
         <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8057" style="width:0%"></div></div>
       </div>
     </div>
 
-    <!-- Search log table -->
+    <!-- ── Filter + Export ── -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <label>🔍 بحث بالاسم:</label>
+        <input type="text" id="nameSearch" placeholder="اكتب اسم أو جزء من الاسم…" oninput="applyFilters()" />
+
+        <label>الحالة:</label>
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="all">الكل</option>
+          <option value="searched">استفسروا فقط</option>
+          <option value="noshow">لم يستفسروا (0 مرات)</option>
+        </select>
+
+        <label>الرحلة:</label>
+        <select id="flightFilter" onchange="applyFilters()">
+          <option value="all">كل الرحلات</option>
+          <option value="SV8035">SV8035</option>
+          <option value="SV8037">SV8037</option>
+          <option value="SV8057">SV8057</option>
+        </select>
+
+        <span class="filter-count" id="filterCount"></span>
+      </div>
+
+      <div class="export-row">
+        <button class="btn-export btn-export-view"   onclick="exportFiltered()">📥 تصدير الظاهر الآن</button>
+        <button class="btn-export btn-export-noshow" onclick="exportNoShow()">📤 تصدير لم يستفسروا</button>
+        <button class="btn-export btn-export-all"    onclick="exportAll()">💾 تصدير الكل</button>
+      </div>
+    </div>
+
+    <!-- Table -->
     <div class="table-card">
       <div class="table-top">
-        <span>سجل الاستفسارات</span>
+        <span>سجل الحجاج</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -241,21 +307,24 @@
               <th>رقم الهوية</th>
               <th>الجنس</th>
               <th>الرحلة</th>
+              <th>الحالة</th>
+              <th>عدد مرات الاستفسار</th>
               <th>أول استفسار</th>
               <th>آخر استفسار</th>
-              <th>عدد المرات</th>
             </tr>
           </thead>
           <tbody id="searchTable">
-            <tr><td colspan="8" class="loading">جاري تحميل البيانات…</td></tr>
+            <tr><td colspan="9" class="loading">جاري تحميل البيانات…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Firebase 10 compat -->
+  </div><!-- /content -->
+</div><!-- /dashboard -->
+
+<!-- PapaParse + Firebase -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
@@ -272,20 +341,22 @@ const firebaseConfig = {
   appId:             "REPLACE_APP_ID"
 };
 // ================================================================
-
-// كلمة مرور لوحة التحكم — يمكن تغييرها هنا
 const ADMIN_PASSWORD = "Admin@1447";
-
-const TOTAL      = 1021;
-const TOTALS     = { SV8035: 339, SV8037: 328, SV8057: 354 };
+const TOTAL          = 1021;
+const TOTALS         = { SV8035: 339, SV8037: 328, SV8057: 354 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ── Auth ─────────────────────────────────────────────────────────
+// ── State ───────────────────────────────────────────────────────
+let allPilgrims  = [];   // [{id, name, gender, flight}] from CSV
+let searchLogs   = {};   // {id: {count, firstSearch, lastSearch}} from Firebase
+let mergedData   = [];   // combined
+let filteredData = [];   // after filters
+
+// ── Auth ────────────────────────────────────────────────────────
 function checkPass() {
-  const v = document.getElementById("passInput").value;
-  if (v === ADMIN_PASSWORD) {
+  if (document.getElementById("passInput").value === ADMIN_PASSWORD) {
     sessionStorage.setItem("haj_admin", "1");
     showDashboard();
   } else {
@@ -295,44 +366,66 @@ function checkPass() {
 document.getElementById("passInput").addEventListener("keydown", e => {
   if (e.key === "Enter") checkPass();
 });
-
-function logout() {
-  sessionStorage.removeItem("haj_admin");
-  location.reload();
-}
-
+function logout() { sessionStorage.removeItem("haj_admin"); location.reload(); }
 function showDashboard() {
-  document.getElementById("passScreen").style.display  = "none";
-  document.getElementById("dashboard").style.display   = "block";
+  document.getElementById("passScreen").style.display = "none";
+  document.getElementById("dashboard").style.display  = "block";
   loadData();
 }
-
 if (sessionStorage.getItem("haj_admin") === "1") showDashboard();
 
-// ── Load data ────────────────────────────────────────────────────
+// ── Load ─────────────────────────────────────────────────────────
 function loadData() {
   document.getElementById("searchTable").innerHTML =
-    '<tr><td colspan="8" class="loading">جاري التحميل…</td></tr>';
+    '<tr><td colspan="9" class="loading">جاري تحميل البيانات…</td></tr>';
 
-  db.collection("searches").orderBy("lastSearch", "desc").get()
-    .then(snap => {
-      const docs = [];
-      snap.forEach(d => docs.push(d.data()));
-      renderStats(docs);
-      renderTable(docs);
-
-      const now = new Date().toLocaleTimeString("ar-SA");
-      document.getElementById("lastUpdated").textContent = `آخر تحديث: ${now}`;
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById("searchTable").innerHTML =
-        '<tr><td colspan="8" class="loading">حدث خطأ في تحميل البيانات. تأكد من إعداد Firebase.</td></tr>';
-    });
+  Promise.all([loadCSV(), loadFirebase()]).then(([pilgrims, logs]) => {
+    allPilgrims = pilgrims;
+    searchLogs  = logs;
+    mergedData  = pilgrims.map(p => ({
+      ...p,
+      log: logs[p.id] || null
+    }));
+    renderStats();
+    applyFilters();
+    const now = new Date().toLocaleTimeString("ar-SA");
+    document.getElementById("lastUpdated").textContent = `آخر تحديث: ${now}`;
+  }).catch(err => {
+    console.error(err);
+    document.getElementById("searchTable").innerHTML =
+      '<tr><td colspan="9" class="loading">حدث خطأ. تأكد من إعداد Firebase والـ CSV.</td></tr>';
+  });
 }
 
-function renderStats(docs) {
-  const searched  = docs.length;
+function loadCSV() {
+  return new Promise((resolve, reject) => {
+    Papa.parse("../data/hajj-data.csv", {
+      download: true, header: true, skipEmptyLines: true,
+      complete: r => resolve(r.data.map(row => ({
+        id:     String(row.id   || "").trim(),
+        name:   String(row.name || "").trim(),
+        gender: String(row.gender || "").trim(),
+        flight: String(row.flight || "").trim().replace(/[^A-Za-z0-9]/g,"").toUpperCase()
+      }))),
+      error: reject
+    });
+  });
+}
+
+function loadFirebase() {
+  return db.collection("searches").get().then(snap => {
+    const logs = {};
+    snap.forEach(doc => {
+      const d = doc.data();
+      logs[String(d.id)] = { count: d.count || 1, firstSearch: d.firstSearch, lastSearch: d.lastSearch };
+    });
+    return logs;
+  });
+}
+
+// ── Stats ────────────────────────────────────────────────────────
+function renderStats() {
+  const searched  = Object.keys(searchLogs).length;
   const remaining = TOTAL - searched;
   const pct       = Math.round((searched / TOTAL) * 100);
 
@@ -343,54 +436,130 @@ function renderStats(docs) {
   document.getElementById("progressLabel").textContent =
     `${searched} من ${TOTAL} حاج استفسروا عن رحلاتهم (${pct}%)`;
 
-  const keys = ["SV8035","SV8037","SV8057"];
-  const ids  = ["8035","8037","8057"];
-  keys.forEach((k, i) => {
-    const n = docs.filter(d => d.flight === k).length;
+  ["SV8035","SV8037","SV8057"].forEach(k => {
+    const suffix = k.slice(2);
+    const n = allPilgrims.filter(p => p.flight === k && searchLogs[p.id]).length;
     const t = TOTALS[k];
-    const p = Math.round((n / t) * 100);
-    document.getElementById(`n${ids[i]}`).textContent = n;
-    document.getElementById(`r${ids[i]}`).textContent = t - n;
-    document.getElementById(`b${ids[i]}`).style.width = p + "%";
+    document.getElementById(`n${suffix}`).textContent = n;
+    document.getElementById(`r${suffix}`).textContent = t - n;
+    document.getElementById(`b${suffix}`).style.width = Math.round(n/t*100) + "%";
   });
 }
 
-function renderTable(docs) {
-  if (docs.length === 0) {
+// ── Filters ──────────────────────────────────────────────────────
+function applyFilters() {
+  const q      = document.getElementById("nameSearch").value.trim();
+  const status = document.getElementById("statusFilter").value;
+  const flight = document.getElementById("flightFilter").value;
+
+  filteredData = mergedData.filter(p => {
+    const count = p.log ? p.log.count : 0;
+    if (q      && !p.name.includes(q))          return false;
+    if (status === "searched" && count === 0)   return false;
+    if (status === "noshow"   && count > 0)     return false;
+    if (flight !== "all"      && p.flight !== flight) return false;
+    return true;
+  });
+
+  // Sort: not-searched first, then by name
+  filteredData.sort((a, b) => {
+    const ca = a.log ? a.log.count : 0;
+    const cb = b.log ? b.log.count : 0;
+    if (ca === 0 && cb > 0) return -1;
+    if (ca > 0 && cb === 0) return  1;
+    return a.name.localeCompare(b.name, "ar");
+  });
+
+  document.getElementById("filterCount").textContent =
+    `يُعرض ${filteredData.length} من ${TOTAL}`;
+
+  renderTable(filteredData);
+}
+
+// ── Table render ─────────────────────────────────────────────────
+function renderTable(data) {
+  if (!data.length) {
     document.getElementById("searchTable").innerHTML =
-      '<tr><td colspan="8" class="loading">لا توجد استفسارات بعد.</td></tr>';
+      '<tr><td colspan="9" class="loading">لا توجد نتائج مطابقة.</td></tr>';
     return;
   }
 
-  const flightBadge = { SV8035: "b8035", SV8037: "b8037", SV8057: "b8057" };
-  const rows = docs.map((d, i) => {
-    const bc = flightBadge[d.flight] || "";
-    return `<tr>
-      <td>${i + 1}</td>
-      <td>${esc(d.name)}</td>
-      <td>${esc(d.id)}</td>
-      <td>${d.gender === "انثى" ? "أنثى" : "ذكر"}</td>
-      <td><span class="badge ${bc}">${esc(d.flight)}</span></td>
-      <td>${fmtDate(d.firstSearch)}</td>
-      <td>${fmtDate(d.lastSearch)}</td>
-      <td>${d.count || 1}</td>
+  const flightBadge = { SV8035:"b8035", SV8037:"b8037", SV8057:"b8057" };
+  const rows = data.map((p, i) => {
+    const count    = p.log ? p.log.count : 0;
+    const noshow   = count === 0;
+    const statusBadge = noshow
+      ? `<span class="badge b-noshow">لم يستفسر</span>`
+      : `<span class="badge b-searched">استفسر ✓</span>`;
+    const bc = flightBadge[p.flight] || "";
+    return `<tr class="${noshow ? "row-noshow" : ""}">
+      <td>${i+1}</td>
+      <td>${esc(p.name)}</td>
+      <td>${esc(p.id)}</td>
+      <td>${p.gender === "انثى" ? "أنثى" : "ذكر"}</td>
+      <td><span class="badge ${bc}">${esc(p.flight)}</span></td>
+      <td>${statusBadge}</td>
+      <td>${count}</td>
+      <td>${fmtDate(p.log?.firstSearch)}</td>
+      <td>${fmtDate(p.log?.lastSearch)}</td>
     </tr>`;
   }).join("");
 
   document.getElementById("searchTable").innerHTML = rows;
 }
 
+// ── Export helpers ───────────────────────────────────────────────
+function exportAll()      { downloadCSV(mergedData,   "حجاج-1447-الكل.csv"); }
+function exportNoShow()   { downloadCSV(mergedData.filter(p => !p.log || p.log.count === 0), "لم-يستفسروا.csv"); }
+function exportFiltered() { downloadCSV(filteredData, "نتائج-مُصفّاة.csv"); }
+
+function downloadCSV(data, filename) {
+  if (!data.length) return alert("لا توجد بيانات للتصدير.");
+
+  const headers = ["م","الاسم","رقم الهوية","الجنس","الرحلة","الحالة","عدد مرات الاستفسار","أول استفسار","آخر استفسار"];
+  const rows = data.map((p, i) => {
+    const count = p.log ? p.log.count : 0;
+    return [
+      i + 1,
+      p.name,
+      p.id,
+      p.gender,
+      p.flight,
+      count > 0 ? "استفسر" : "لم يستفسر",
+      count,
+      fmtDatePlain(p.log?.firstSearch),
+      fmtDatePlain(p.log?.lastSearch)
+    ];
+  });
+
+  const csvContent = "﻿" + // BOM for Excel Arabic support
+    [headers, ...rows].map(r => r.map(cell =>
+      `"${String(cell ?? "").replace(/"/g,'""')}"`
+    ).join(",")).join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
 function fmtDate(ts) {
   if (!ts) return "—";
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleString("ar-SA", {
-    year: "numeric", month: "short", day: "numeric",
-    hour: "2-digit", minute: "2-digit"
+    year:"numeric", month:"short", day:"numeric",
+    hour:"2-digit", minute:"2-digit"
   });
 }
-
+function fmtDatePlain(ts) {
+  if (!ts) return "";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString("ar-SA");
+}
 function esc(s) {
-  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 </script>
 </body>
