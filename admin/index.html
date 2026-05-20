@@ -107,24 +107,40 @@
 
     /* ── Filter bar ── */
     .filter-card {
-      background: #fff; border-radius: 14px; padding: 16px 20px;
+      background: #fff; border-radius: 14px; padding: 18px 20px;
       box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 16px;
     }
+
+    /* Smart search */
+    .smart-search-wrap {
+      position: relative; margin-bottom: 14px;
+    }
+    .smart-search-wrap input {
+      width: 100%; padding: 13px 16px; font-size: 16px; font-family: inherit;
+      border: 2px solid #ddd; border-radius: 10px; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      padding-left: 130px;
+    }
+    .smart-search-wrap input:focus { border-color: #555; box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+    .search-mode-badge {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold;
+      pointer-events: none; transition: background .2s, color .2s;
+    }
+    .mode-default { background: #f0f0f0; color: #999; }
+    .mode-id      { background: #e3f2fd; color: #1565c0; }
+    .mode-name    { background: #f3e5f5; color: #6a1b9a; }
+
     .filter-row {
       display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
     }
     .filter-row label { font-size: 13px; color: #555; white-space: nowrap; }
-    .filter-row input[type=text] {
-      flex: 1; min-width: 160px; padding: 9px 12px; font-size: 14px; font-family: inherit;
-      border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border-color .2s;
-    }
-    .filter-row input[type=text]:focus { border-color: #2e7d32; }
     .filter-row select {
       padding: 9px 10px; font-size: 14px; font-family: inherit;
       border: 2px solid #ddd; border-radius: 8px; outline: none; background: #fff;
       cursor: pointer; transition: border-color .2s;
     }
-    .filter-row select:focus { border-color: #2e7d32; }
+    .filter-row select:focus { border-color: #555; }
     .filter-count {
       font-size: 13px; color: #888; white-space: nowrap; margin-right: auto;
     }
@@ -264,10 +280,18 @@
 
     <!-- ── Filter + Export ── -->
     <div class="filter-card">
-      <div class="filter-row">
-        <label>🔍 بحث بالاسم:</label>
-        <input type="text" id="nameSearch" placeholder="اكتب اسم أو جزء من الاسم…" oninput="applyFilters()" />
 
+      <!-- Smart search -->
+      <div class="smart-search-wrap">
+        <input type="text" id="smartSearch"
+          placeholder="ابحث بالاسم أو رقم الهوية…"
+          inputmode="text"
+          autocomplete="off"
+          oninput="onSearchInput()" />
+        <span class="search-mode-badge mode-default" id="searchModeBadge">ابدأ الكتابة</span>
+      </div>
+
+      <div class="filter-row">
         <label>الحالة:</label>
         <select id="statusFilter" onchange="applyFilters()">
           <option value="all">الكل</option>
@@ -446,17 +470,46 @@ function renderStats() {
   });
 }
 
+// ── Smart search input handler ────────────────────────────────────
+function onSearchInput() {
+  const q     = document.getElementById("smartSearch").value.trim();
+  const badge = document.getElementById("searchModeBadge");
+  const input = document.getElementById("smartSearch");
+
+  if (!q) {
+    badge.textContent = "ابدأ الكتابة";
+    badge.className   = "search-mode-badge mode-default";
+    input.inputMode   = "text";
+  } else if (/^\d+$/.test(q)) {
+    badge.textContent = `🔢 هوية — ${q.length} رقم`;
+    badge.className   = "search-mode-badge mode-id";
+    input.inputMode   = "numeric";
+  } else {
+    badge.textContent = "🔤 بحث بالاسم";
+    badge.className   = "search-mode-badge mode-name";
+    input.inputMode   = "text";
+  }
+  applyFilters();
+}
+
 // ── Filters ──────────────────────────────────────────────────────
 function applyFilters() {
-  const q      = document.getElementById("nameSearch").value.trim();
+  const q      = document.getElementById("smartSearch").value.trim();
   const status = document.getElementById("statusFilter").value;
   const flight = document.getElementById("flightFilter").value;
+  const isNumeric = q && /^\d+$/.test(q);
 
   filteredData = mergedData.filter(p => {
     const count = p.log ? p.log.count : 0;
-    if (q      && !p.name.includes(q))          return false;
-    if (status === "searched" && count === 0)   return false;
-    if (status === "noshow"   && count > 0)     return false;
+    if (q) {
+      if (isNumeric) {
+        if (!p.id.startsWith(q)) return false;       // prefix match on ID
+      } else {
+        if (!p.name.includes(q)) return false;       // contains match on name
+      }
+    }
+    if (status === "searched" && count === 0)        return false;
+    if (status === "noshow"   && count > 0)          return false;
     if (flight !== "all"      && p.flight !== flight) return false;
     return true;
   });
