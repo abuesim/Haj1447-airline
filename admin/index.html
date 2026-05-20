@@ -471,11 +471,15 @@ function renderStats() {
 }
 
 // ── Smart search input handler ────────────────────────────────────
+const DISPLAY_LIMIT = 200;
+let _searchTimer = null;
+
 function onSearchInput() {
   const q     = document.getElementById("smartSearch").value.trim();
   const badge = document.getElementById("searchModeBadge");
   const input = document.getElementById("smartSearch");
 
+  // update badge instantly (no delay)
   if (!q) {
     badge.textContent = "ابدأ الكتابة";
     badge.className   = "search-mode-badge mode-default";
@@ -489,7 +493,10 @@ function onSearchInput() {
     badge.className   = "search-mode-badge mode-name";
     input.inputMode   = "text";
   }
-  applyFilters();
+
+  // debounce: wait 200ms after last keystroke before filtering
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(applyFilters, 200);
 }
 
 // ── Filters ──────────────────────────────────────────────────────
@@ -537,8 +544,9 @@ function renderTable(data) {
     return;
   }
 
+  const display = data.slice(0, DISPLAY_LIMIT);
   const flightBadge = { SV8035:"b8035", SV8037:"b8037", SV8057:"b8057" };
-  const rows = data.map((p, i) => {
+  const rows = display.map((p, i) => {
     const count    = p.log ? p.log.count : 0;
     const noshow   = count === 0;
     const statusBadge = noshow
@@ -558,7 +566,13 @@ function renderTable(data) {
     </tr>`;
   }).join("");
 
-  document.getElementById("searchTable").innerHTML = rows;
+  const footer = data.length > DISPLAY_LIMIT
+    ? `<tr><td colspan="9" style="text-align:center;padding:12px;color:#888;font-size:13px;background:#fafafa">
+        يُعرض أول ${DISPLAY_LIMIT} من ${data.length} نتيجة — استخدم البحث لتضييق النتائج
+       </td></tr>`
+    : "";
+
+  document.getElementById("searchTable").innerHTML = rows + footer;
 }
 
 // ── Export helpers ───────────────────────────────────────────────
