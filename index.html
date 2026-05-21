@@ -385,23 +385,37 @@ function doSearch() {
       searchBtn.innerHTML = "🔍&nbsp; بحث";
 
       const found = results.data.find(r => String(r.id).trim() === idValue);
-      if (!found) {
+
+      if (found) {
+        // found in CSV
+        const name   = found.name   || "";
+        const gender = found.gender || "";
+        const flight = (found.flight || "").trim().replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+        if (!FLIGHTS[flight]) { errorDiv.textContent = `تنبيه: الرحلة غير مدعومة.`; return; }
+        currentRecord = { ...found, flightKey: flight };
+        renderCard(name, gender, flight);
+        logSearch(idValue, name, gender, flight);
+      } else if (db) {
+        // check manually-added pilgrims in Firestore
+        db.collection("manual_pilgrims").doc(idValue).get().then(doc => {
+          if (!doc.exists) {
+            errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
+            return;
+          }
+          const d      = doc.data();
+          const name   = d.name   || "";
+          const gender = d.gender || "";
+          const flight = (d.flight || "").replace(/[^A-Za-z0-9]/g,"").toUpperCase();
+          if (!FLIGHTS[flight]) { errorDiv.textContent = `تنبيه: الرحلة غير مدعومة.`; return; }
+          currentRecord = { id: idValue, name, gender, flightKey: flight };
+          renderCard(name, gender, flight);
+          logSearch(idValue, name, gender, flight);
+        }).catch(() => {
+          errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
+        });
+      } else {
         errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
-        return;
       }
-
-      const name   = found.name   || "";
-      const gender = found.gender || "";
-      const flight = (found.flight || "").trim().replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-
-      if (!FLIGHTS[flight]) {
-        errorDiv.textContent = `تنبيه: الرحلة "${found.flight}" غير مدعومة.`;
-        return;
-      }
-
-      currentRecord = { ...found, flightKey: flight };
-      renderCard(name, gender, flight);
-      logSearch(idValue, name, gender, flight);
     },
     error: () => {
       searchBtn.disabled = false;

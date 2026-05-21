@@ -145,6 +145,47 @@
       font-size: 13px; color: #888; white-space: nowrap; margin-right: auto;
     }
 
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 999; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 18px; padding: 30px 28px;
+      width: 400px; max-width: 95vw; box-shadow: 0 16px 48px rgba(0,0,0,.3);
+    }
+    .modal-title {
+      font-size: 18px; font-weight: bold; color: #1a1a1a;
+      margin-bottom: 20px; text-align: center;
+    }
+    .form-field { margin-bottom: 14px; }
+    .form-field label {
+      display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: bold;
+    }
+    .form-field input, .form-field select {
+      width: 100%; padding: 11px 12px; font-size: 15px; font-family: inherit;
+      border: 2px solid #ddd; border-radius: 9px; outline: none;
+      transition: border-color .2s; background: #fff;
+    }
+    .form-field input:focus, .form-field select:focus { border-color: #222; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-save-pilgrim {
+      flex: 2; padding: 12px; background: #222; color: #fff; border: none;
+      border-radius: 9px; font-size: 15px; font-family: inherit; font-weight: bold;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-save-pilgrim:hover { background: #000; }
+    .btn-save-pilgrim:disabled { opacity: .5; cursor: default; }
+    .btn-cancel {
+      flex: 1; padding: 12px; background: #f0f0f0; color: #555; border: none;
+      border-radius: 9px; font-size: 15px; font-family: inherit; cursor: pointer;
+    }
+    .btn-cancel:hover { background: #e0e0e0; }
+    .modal-msg { text-align: center; font-size: 13px; margin-top: 10px; min-height: 18px; }
+    .modal-msg.ok  { color: #2e7d32; }
+    .modal-msg.err { color: #c62828; }
+
     /* ── Export buttons ── */
     .export-row {
       display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;
@@ -218,6 +259,7 @@
     <div class="topbar-actions">
       <span id="lastUpdated"></span>
       <button class="btn-icon btn-refresh" onclick="loadData()">🔄 تحديث</button>
+      <button class="btn-icon" style="background:#f59e0b;color:#fff" onclick="openModal()">➕ إضافة حاج</button>
       <button class="btn-icon btn-logout"  onclick="logout()">خروج</button>
     </div>
   </div>
@@ -347,6 +389,43 @@
   </div><!-- /content -->
 </div><!-- /dashboard -->
 
+<!-- ══ Add Pilgrim Modal ══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-title">➕ إضافة حاج يدوياً</div>
+
+    <div class="form-field">
+      <label>الاسم الكامل</label>
+      <input type="text" id="f_name" placeholder="مثال: محمد علي الأحمد" autocomplete="off" />
+    </div>
+    <div class="form-field">
+      <label>رقم الهوية</label>
+      <input type="text" id="f_id" placeholder="10 أرقام" inputmode="numeric" autocomplete="off" />
+    </div>
+    <div class="form-field">
+      <label>الجنس</label>
+      <select id="f_gender">
+        <option value="ذكر">ذكر</option>
+        <option value="انثى">أنثى</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>رقم الرحلة</label>
+      <select id="f_flight">
+        <option value="SV8035">SV8035 — 7 ذو الحجة (4:20م)</option>
+        <option value="SV8037">SV8037 — 7 ذو الحجة (4:50م)</option>
+        <option value="SV8057">SV8057 — 8 ذو الحجة (6:00ص)</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-save-pilgrim" id="btnSavePilgrim" onclick="savePilgrim()">حفظ</button>
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+    </div>
+    <div class="modal-msg" id="modalMsg"></div>
+  </div>
+</div>
+
 <!-- PapaParse + Firebase -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -403,22 +482,25 @@ function loadData() {
   document.getElementById("searchTable").innerHTML =
     '<tr><td colspan="9" class="loading">جاري تحميل البيانات…</td></tr>';
 
-  // Load CSV first — always critical
-  loadCSV().then(pilgrims => {
-    allPilgrims = pilgrims;
-    mergedData  = pilgrims.map(p => ({ ...p, log: null }));
-    applyFilters(); // show data immediately even before Firebase
+  // Load CSV + manual pilgrims from Firestore in parallel
+  Promise.all([
+    loadCSV(),
+    loadManualPilgrims().catch(() => [])
+  ]).then(([csvPilgrims, manualPilgrims]) => {
+    allPilgrims = [...csvPilgrims, ...manualPilgrims];
+    mergedData  = allPilgrims.map(p => ({ ...p, log: null }));
+    applyFilters();
 
-    // Load Firebase in parallel — non-blocking
+    // Load search logs — non-blocking
     loadFirebase().then(logs => {
       searchLogs = logs;
-      mergedData = pilgrims.map(p => ({ ...p, log: logs[p.id] || null }));
+      mergedData = allPilgrims.map(p => ({ ...p, log: logs[p.id] || null }));
       renderStats();
       applyFilters();
       const now = new Date().toLocaleTimeString("ar-SA");
       document.getElementById("lastUpdated").textContent = `آخر تحديث: ${now}`;
     }).catch(err => {
-      console.warn("Firebase error (data still loaded):", err);
+      console.warn("Firebase logs error:", err);
       renderStats();
       document.getElementById("lastUpdated").textContent = "⚠️ Firebase غير متاح";
     });
@@ -442,6 +524,23 @@ function loadCSV() {
       }))),
       error: reject
     });
+  });
+}
+
+function loadManualPilgrims() {
+  return db.collection("manual_pilgrims").get().then(snap => {
+    const result = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      result.push({
+        id:     String(d.id     || "").trim(),
+        name:   String(d.name   || "").trim(),
+        gender: String(d.gender || "").trim(),
+        flight: String(d.flight || "").trim(),
+        manual: true
+      });
+    });
+    return result;
   });
 }
 
@@ -636,6 +735,64 @@ function fmtDatePlain(ts) {
 }
 function esc(s) {
   return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ── Modal ────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById("f_name").value   = "";
+  document.getElementById("f_id").value     = "";
+  document.getElementById("f_gender").value = "ذكر";
+  document.getElementById("f_flight").value = "SV8035";
+  document.getElementById("modalMsg").textContent = "";
+  document.getElementById("modalMsg").className   = "modal-msg";
+  document.getElementById("btnSavePilgrim").disabled = false;
+  document.getElementById("modalOverlay").classList.add("open");
+  document.getElementById("f_name").focus();
+}
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById("modalOverlay")) closeModal();
+}
+
+function savePilgrim() {
+  const name   = document.getElementById("f_name").value.trim();
+  const id     = document.getElementById("f_id").value.trim();
+  const gender = document.getElementById("f_gender").value;
+  const flight = document.getElementById("f_flight").value;
+  const msg    = document.getElementById("modalMsg");
+
+  if (!name)              { msg.textContent = "أدخل الاسم.";          msg.className = "modal-msg err"; return; }
+  if (!/^\d{8,12}$/.test(id)) { msg.textContent = "رقم الهوية غير صحيح."; msg.className = "modal-msg err"; return; }
+
+  // check duplicate
+  const exists = allPilgrims.find(p => p.id === id);
+  if (exists) { msg.textContent = `الهوية موجودة مسبقاً: ${exists.name}`; msg.className = "modal-msg err"; return; }
+
+  const btn = document.getElementById("btnSavePilgrim");
+  btn.disabled = true;
+  btn.textContent = "جاري الحفظ…";
+
+  db.collection("manual_pilgrims").doc(id).set({ id, name, gender, flight, addedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .then(() => {
+      msg.textContent = `✅ تم إضافة ${name} بنجاح`;
+      msg.className   = "modal-msg ok";
+      btn.textContent = "حفظ";
+      // add locally without full reload
+      const newPilgrim = { id, name, gender, flight, manual: true, log: null };
+      allPilgrims.push(newPilgrim);
+      mergedData.push(newPilgrim);
+      applyFilters();
+      setTimeout(closeModal, 1200);
+    })
+    .catch(err => {
+      console.error(err);
+      msg.textContent = "حدث خطأ أثناء الحفظ.";
+      msg.className   = "modal-msg err";
+      btn.disabled    = false;
+      btn.textContent = "حفظ";
+    });
 }
 </script>
 </body>
