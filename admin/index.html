@@ -403,21 +403,30 @@ function loadData() {
   document.getElementById("searchTable").innerHTML =
     '<tr><td colspan="9" class="loading">جاري تحميل البيانات…</td></tr>';
 
-  Promise.all([loadCSV(), loadFirebase()]).then(([pilgrims, logs]) => {
+  // Load CSV first — always critical
+  loadCSV().then(pilgrims => {
     allPilgrims = pilgrims;
-    searchLogs  = logs;
-    mergedData  = pilgrims.map(p => ({
-      ...p,
-      log: logs[p.id] || null
-    }));
-    renderStats();
-    applyFilters();
-    const now = new Date().toLocaleTimeString("ar-SA");
-    document.getElementById("lastUpdated").textContent = `آخر تحديث: ${now}`;
+    mergedData  = pilgrims.map(p => ({ ...p, log: null }));
+    applyFilters(); // show data immediately even before Firebase
+
+    // Load Firebase in parallel — non-blocking
+    loadFirebase().then(logs => {
+      searchLogs = logs;
+      mergedData = pilgrims.map(p => ({ ...p, log: logs[p.id] || null }));
+      renderStats();
+      applyFilters();
+      const now = new Date().toLocaleTimeString("ar-SA");
+      document.getElementById("lastUpdated").textContent = `آخر تحديث: ${now}`;
+    }).catch(err => {
+      console.warn("Firebase error (data still loaded):", err);
+      renderStats();
+      document.getElementById("lastUpdated").textContent = "⚠️ Firebase غير متاح";
+    });
+
   }).catch(err => {
-    console.error(err);
+    console.error("CSV load failed:", err);
     document.getElementById("searchTable").innerHTML =
-      '<tr><td colspan="9" class="loading">حدث خطأ. تأكد من إعداد Firebase والـ CSV.</td></tr>';
+      '<tr><td colspan="9" class="loading">حدث خطأ في تحميل بيانات الحجاج.</td></tr>';
   });
 }
 
