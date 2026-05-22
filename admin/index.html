@@ -565,26 +565,27 @@ if (sessionStorage.getItem("haj_admin") === "1") showDashboard();
 function loadData() {
   document.getElementById("searchTable").innerHTML =
     '<tr><td colspan="9" class="loading">جاري تحميل البيانات…</td></tr>';
+  document.getElementById("lastUpdated").textContent = "";
 
-  // Load CSV + manual pilgrims from Firestore in parallel
-  Promise.all([
-    loadCSV(),
-    loadManualPilgrims().catch(() => [])
-  ]).then(([csvPilgrims, manualPilgrims]) => {
-    allPilgrims = [...csvPilgrims, ...manualPilgrims];
-    mergedData  = allPilgrims.map(p => ({ ...p, log: null }));
-    applyFilters();
+  // ① CSV أولاً — مستقل تماماً عن Firebase
+  loadCSV().then(csvPilgrims => {
+    allPilgrims = [...csvPilgrims];
+    mergedData  = csvPilgrims.map(p => ({ ...p, log: null }));
+    applyFilters(); // ← البحث يعمل فوراً بمجرد تحميل الـ CSV
 
-    // Load search logs — non-blocking
-    loadFirebase().then(logs => {
-      searchLogs = logs;
-      mergedData = allPilgrims.map(p => ({ ...p, log: logs[p.id] || null }));
+    // ② Firebase بالتوازي — لا يوقف الـ CSV إذا بطّأ
+    Promise.all([
+      loadManualPilgrims().catch(() => []),
+      loadFirebase().catch(() => ({}))
+    ]).then(([manualPilgrims, logs]) => {
+      searchLogs  = logs;
+      allPilgrims = [...csvPilgrims, ...manualPilgrims];
+      mergedData  = allPilgrims.map(p => ({ ...p, log: logs[p.id] || null }));
       renderStats();
       applyFilters();
       const now = new Date().toLocaleTimeString("ar-SA");
       document.getElementById("lastUpdated").textContent = `آخر تحديث: ${now}`;
-    }).catch(err => {
-      console.warn("Firebase logs error:", err);
+    }).catch(() => {
       renderStats();
       document.getElementById("lastUpdated").textContent = "⚠️ Firebase غير متاح";
     });
