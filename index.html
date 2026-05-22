@@ -442,7 +442,7 @@ function doSearch() {
   searchBtn.disabled = true;
   searchBtn.textContent = "جاري البحث…";
 
-  Papa.parse("data/hajj-data.csv", {
+  Papa.parse(`data/hajj-data.csv?v=${Date.now()}`, {
     download: true,
     header: true,
     skipEmptyLines: true,
