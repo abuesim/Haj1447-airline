@@ -86,9 +86,10 @@
 
     /* ── Flight breakdown ── */
     .flights-grid {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px;
     }
-    @media(max-width:600px){ .flights-grid { grid-template-columns: 1fr; } }
+    @media(max-width:900px){ .flights-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:500px){ .flights-grid { grid-template-columns: 1fr; } }
     .flight-card {
       background: #fff; border-radius: 14px; padding: 18px;
       box-shadow: 0 2px 10px rgba(0,0,0,.07);
@@ -96,6 +97,7 @@
     .flight-card.f8035 { border-right: 5px solid #F9A825; }
     .flight-card.f8037 { border-right: 5px solid #558B2F; }
     .flight-card.f8057 { border-right: 5px solid #C62828; }
+    .flight-card.f8023 { border-right: 5px solid #6a1b9a; }
     .fc-name { font-size: 15px; font-weight: bold; margin-bottom: 10px; }
     .fc-row  { font-size: 13px; color: #555; margin: 4px 0; }
     .fc-num  { font-weight: bold; color: #222; }
@@ -104,6 +106,7 @@
     .f8035 .mini-bar-fill { background: #F9A825; }
     .f8037 .mini-bar-fill { background: #558B2F; }
     .f8057 .mini-bar-fill { background: #C62828; }
+    .f8023 .mini-bar-fill { background: #6a1b9a; }
 
     /* ── Filter bar ── */
     .filter-card {
@@ -231,8 +234,62 @@
     .b8035 { background: #FFF9C4; color: #795548; }
     .b8037 { background: #DCEDC8; color: #2e7d32; }
     .b8057 { background: #FFCDD2; color: #c62828; }
+    .b8023 { background: #E1BEE7; color: #6a1b9a; }
     .b-searched { background: #E8F5E9; color: #2e7d32; }
     .b-noshow   { background: #FFF3E0; color: #e65100; }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex; gap: 6px; margin-bottom: 20px;
+      border-bottom: 2px solid #ddd; padding-bottom: 0;
+    }
+    .tab-btn {
+      padding: 10px 20px; border: none; border-radius: 10px 10px 0 0;
+      font-family: inherit; font-size: 14px; font-weight: bold;
+      cursor: pointer; background: #e0e0e0; color: #555;
+      transition: background .2s, color .2s;
+      margin-bottom: -2px; border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      background: #fff; color: #1b5e20;
+      border-bottom: 2px solid #fff;
+      box-shadow: 0 -2px 8px rgba(0,0,0,.06);
+    }
+    .tab-btn:hover:not(.active) { background: #d5d5d5; }
+
+    /* ── Message Editor ── */
+    .msg-editor-grid {
+      display: grid; grid-template-columns: repeat(2,1fr); gap: 16px;
+    }
+    @media(max-width:700px){ .msg-editor-grid { grid-template-columns: 1fr; } }
+    .msg-card {
+      background: #fff; border-radius: 14px; padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+    }
+    .msg-card.m8035 { border-right: 5px solid #F9A825; }
+    .msg-card.m8037 { border-right: 5px solid #558B2F; }
+    .msg-card.m8057 { border-right: 5px solid #C62828; }
+    .msg-card.m8023 { border-right: 5px solid #6a1b9a; }
+    .msg-card-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #222; }
+    .msg-field { margin-bottom: 12px; }
+    .msg-field label { display: block; font-size: 12px; color: #777; margin-bottom: 4px; font-weight: bold; }
+    .msg-field textarea, .msg-field input[type=text] {
+      width: 100%; font-family: inherit; font-size: 13px;
+      border: 2px solid #ddd; border-radius: 8px; padding: 8px 10px;
+      outline: none; resize: vertical; transition: border-color .2s;
+      direction: rtl;
+    }
+    .msg-field textarea:focus, .msg-field input[type=text]:focus { border-color: #555; }
+    .btn-save-msg {
+      padding: 9px 22px; background: #1b5e20; color: #fff; border: none;
+      border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: bold;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-save-msg:hover { background: #145214; }
+    .btn-save-msg:disabled { opacity: .5; cursor: default; }
+    .msg-status { font-size: 12px; margin-top: 8px; min-height: 16px; }
+    .msg-status.ok  { color: #2e7d32; }
+    .msg-status.err { color: #c62828; }
 
     .loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
     #lastUpdated { font-size: 12px; color: rgba(255,255,255,.5); }
@@ -266,10 +323,19 @@
 
   <div class="content">
 
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabBtnMain" onclick="switchTab('main')">📊 الإحصاءات والحجاج</button>
+      <button class="tab-btn" id="tabBtnMessages" onclick="switchTab('messages')">✏️ تعديل الرسائل</button>
+    </div>
+
+    <!-- ══ TAB: Main ══ -->
+    <div id="tabMain">
+
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card c-blue">
-        <div class="stat-num">1026</div>
+        <div class="stat-num">1120</div>
         <div class="stat-label">إجمالي الحجاج</div>
       </div>
       <div class="stat-card c-green">
@@ -318,6 +384,13 @@
         <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8057">—</span></div>
         <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8057" style="width:0%"></div></div>
       </div>
+      <div class="flight-card f8023">
+        <div class="fc-name">✈️ SV8023 — 7 ذو الحجة (1:30ظ)</div>
+        <div class="fc-row">إجمالي: <span class="fc-num">94</span></div>
+        <div class="fc-row">استفسروا: <span class="fc-num" id="n8023">—</span></div>
+        <div class="fc-row">لم يستفسروا: <span class="fc-num" id="r8023">—</span></div>
+        <div class="mini-bar-bg"><div class="mini-bar-fill" id="b8023" style="width:0%"></div></div>
+      </div>
     </div>
 
     <!-- ── Filter + Export ── -->
@@ -347,6 +420,7 @@
           <option value="SV8035">SV8035</option>
           <option value="SV8037">SV8037</option>
           <option value="SV8057">SV8057</option>
+          <option value="SV8023">SV8023</option>
         </select>
 
         <span class="filter-count" id="filterCount"></span>
@@ -386,6 +460,15 @@
       </div>
     </div>
 
+    </div><!-- /tabMain -->
+
+    <!-- ══ TAB: Message Editor ══ -->
+    <div id="tabMessages" style="display:none">
+      <div class="msg-editor-grid" id="msgEditorGrid">
+        <!-- Cards inserted by JS -->
+      </div>
+    </div><!-- /tabMessages -->
+
   </div><!-- /content -->
 </div><!-- /dashboard -->
 
@@ -415,6 +498,7 @@
         <option value="SV8035">SV8035 — 7 ذو الحجة (4:20م)</option>
         <option value="SV8037">SV8037 — 7 ذو الحجة (4:50م)</option>
         <option value="SV8057">SV8057 — 8 ذو الحجة (6:00ص)</option>
+        <option value="SV8023">SV8023 — 7 ذو الحجة (1:30ظ)</option>
       </select>
     </div>
 
@@ -445,8 +529,8 @@ const firebaseConfig = {
 };
 // ================================================================
 const ADMIN_PASSWORD = "Admin@1447";
-const TOTAL          = 1026;
-const TOTALS         = { SV8035: 339, SV8037: 333, SV8057: 354 };
+const TOTAL          = 1120;
+const TOTALS         = { SV8035: 339, SV8037: 333, SV8057: 354, SV8023: 94 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -568,7 +652,7 @@ function renderStats() {
   document.getElementById("progressLabel").textContent =
     `${searched} من ${TOTAL} حاج استفسروا عن رحلاتهم (${pct}%)`;
 
-  ["SV8035","SV8037","SV8057"].forEach(k => {
+  ["SV8035","SV8037","SV8057","SV8023"].forEach(k => {
     const suffix = k.slice(2);
     const n = allPilgrims.filter(p => p.flight === k && searchLogs[p.id]).length;
     const t = TOTALS[k];
@@ -653,7 +737,7 @@ function renderTable(data) {
   }
 
   const display = data.slice(0, DISPLAY_LIMIT);
-  const flightBadge = { SV8035:"b8035", SV8037:"b8037", SV8057:"b8057" };
+  const flightBadge = { SV8035:"b8035", SV8037:"b8037", SV8057:"b8057", SV8023:"b8023" };
   const rows = display.map((p, i) => {
     const count    = p.log ? p.log.count : 0;
     const noshow   = count === 0;
@@ -754,6 +838,95 @@ function closeModal() {
 }
 function closeModalOutside(e) {
   if (e.target === document.getElementById("modalOverlay")) closeModal();
+}
+
+// ── Tab switching ─────────────────────────────────────────────────
+function switchTab(name) {
+  document.getElementById("tabMain").style.display     = name === "main"     ? "" : "none";
+  document.getElementById("tabMessages").style.display = name === "messages" ? "" : "none";
+  document.getElementById("tabBtnMain").classList.toggle("active",     name === "main");
+  document.getElementById("tabBtnMessages").classList.toggle("active", name === "messages");
+  if (name === "messages") buildMsgEditor();
+}
+
+// ── Message Editor ────────────────────────────────────────────────
+const FLIGHT_META = {
+  SV8035: { label: "SV8035 — 7 ذو الحجة (4:20م)",  cls: "m8035", defaultNotes: ["فضلاً التواجد بالمطار الساعة 1:20م","كاونتر (336) مخصص لذوي الاحتياجات الخاصة","عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود","سيتم دفع الهدي لكل الحجاج من قبل الحملة"] },
+  SV8037: { label: "SV8037 — 7 ذو الحجة (4:50م)",  cls: "m8037", defaultNotes: ["فضلاً التواجد بالمطار الساعة 1:50م","كاونتر (336) مخصص لذوي الاحتياجات الخاصة","عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود","سيتم دفع الهدي لكل الحجاج من قبل الحملة"] },
+  SV8057: { label: "SV8057 — 8 ذو الحجة (6:00ص)",  cls: "m8057", defaultNotes: ["فضلاً التواجد بالمطار الساعة 3:00 صباحاً","كاونتر (336) مخصص لذوي الاحتياجات الخاصة","عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود","سيتم دفع الهدي لكل الحجاج من قبل الحملة"] },
+  SV8023: { label: "SV8023 — 7 ذو الحجة (1:30ظ)",  cls: "m8023", defaultNotes: ["فضلاً التواجد بالمطار الساعة 10:30 صباحاً","عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود","سيتم دفع الهدي لكل الحجاج من قبل الحملة"] },
+};
+
+let _msgEditorBuilt = false;
+let _msgOverrides   = {}; // cached Firestore data
+
+async function buildMsgEditor() {
+  if (_msgEditorBuilt) return;
+  _msgEditorBuilt = true;
+  const grid = document.getElementById("msgEditorGrid");
+  grid.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa">جاري تحميل الرسائل…</div>';
+
+  // Fetch existing overrides
+  try {
+    const snap = await db.collection("flight_messages").get();
+    snap.forEach(doc => { _msgOverrides[doc.id] = doc.data(); });
+  } catch(e) { /* ignore */ }
+
+  const cards = Object.entries(FLIGHT_META).map(([flight, meta]) => {
+    const saved   = _msgOverrides[flight] || {};
+    const notes   = (saved.notes && saved.notes.length) ? saved.notes : meta.defaultNotes;
+    const notesVal = notes.join("\n");
+    const ptBody  = saved.plainTextBody || "";
+    return `
+    <div class="msg-card ${meta.cls}">
+      <div class="msg-card-title">✈️ ${meta.label}</div>
+      <div class="msg-field">
+        <label>التنبيهات (كل تنبيه في سطر — تُعرض في البطاقة والواتساب)</label>
+        <textarea id="mnotes_${flight}" rows="5">${esc(notesVal)}</textarea>
+      </div>
+      <div class="msg-field">
+        <label>نص الواتساب المخصص (اختياري — يُستخدم بدلاً من النص التلقائي، بعد سطر التحية)</label>
+        <textarea id="mplain_${flight}" rows="6" placeholder="اتركه فارغاً لاستخدام النص التلقائي">${esc(ptBody)}</textarea>
+      </div>
+      <button class="btn-save-msg" id="msave_${flight}" onclick="saveMsgFlight('${flight}')">💾 حفظ رسالة ${flight}</button>
+      <div class="msg-status" id="mstatus_${flight}"></div>
+    </div>`;
+  }).join("");
+  grid.innerHTML = cards;
+}
+
+async function saveMsgFlight(flight) {
+  const btn    = document.getElementById(`msave_${flight}`);
+  const status = document.getElementById(`mstatus_${flight}`);
+  const notesRaw = document.getElementById(`mnotes_${flight}`).value.trim();
+  const ptBody   = document.getElementById(`mplain_${flight}`).value.trim();
+
+  const notes = notesRaw.split("\n").map(s => s.trim()).filter(Boolean);
+  if (!notes.length) { status.textContent = "أدخل تنبيهاً واحداً على الأقل."; status.className = "msg-status err"; return; }
+
+  btn.disabled    = true;
+  btn.textContent = "جاري الحفظ…";
+  status.textContent = "";
+
+  try {
+    const payload = {
+      notes,
+      savedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (ptBody) payload.plainTextBody = ptBody;
+    else payload.plainTextBody = firebase.firestore.FieldValue.delete();
+
+    await db.collection("flight_messages").doc(flight).set(payload, { merge: true });
+    _msgOverrides[flight] = { ..._msgOverrides[flight], notes, plainTextBody: ptBody };
+    status.textContent = "✅ تم الحفظ بنجاح";
+    status.className   = "msg-status ok";
+  } catch(e) {
+    console.error(e);
+    status.textContent = "حدث خطأ أثناء الحفظ.";
+    status.className   = "msg-status err";
+  }
+  btn.disabled    = false;
+  btn.textContent = `💾 حفظ رسالة ${flight}`;
 }
 
 function savePilgrim() {

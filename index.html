@@ -87,6 +87,7 @@
     .flight-SV8035 { border-right: 6px solid #F9A825; background: #FFFDE7; }
     .flight-SV8037 { border-right: 6px solid #558B2F; background: #F1F8E9; }
     .flight-SV8057 { border-right: 6px solid #C62828; background: #FFF3F3; }
+    .flight-SV8023 { border-right: 6px solid #6a1b9a; background: #F3E5F5; }
 
     .card-header {
       text-align: center;
@@ -351,8 +352,73 @@ const FLIGHTS = {
 • كاونتر (336) مخصص لذوي الاحتياجات الخاصة
 • عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود
 • سيتم دفع الهدي لكل الحجاج من قبل الحملة`
+  },
+
+  SV8023: {
+    color: "SV8023",
+    details: {
+      "رقم الرحلة":     "SV8023",
+      "المغادرة من":    "الرياض",
+      "الوصول إلى":     "جدة",
+      "تاريخ المغادرة": "7 ذو الحجة 1447هـ",
+      "وقت المغادرة":   "13:30 (1:30 ظهراً)",
+      "الصالة":         "مطار الملك خالد — صالة رقم 4",
+      "بوابة الدخول":   "بوابة رقم (4)",
+    },
+    notes: [
+      "فضلاً التواجد بالمطار الساعة <strong>10:30 صباحاً</strong>",
+      "عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود",
+      "سيتم دفع الهدي لكل الحجاج من قبل الحملة"
+    ],
+    plainText: (name, gender) =>
+`${gender === 'انثى' ? 'أختي الحاجة' : 'أخي الحاج'} / ${name}
+
+نود إبلاغكم بموعد إقلاع رحلتكم:
+رحلة رقم: SV8023
+المغادرة من: الرياض
+الوصول إلى: جدة
+تاريخ المغادرة: 7 ذو الحجة 1447هـ
+وقت المغادرة: 13:30 (1:30 ظهراً)
+عبر صالات مطار الملك خالد بمدينة الرياض (صالة رقم 4)
+الدخول من بوابة رقم (4)
+
+📍 خريطة الموقع: https://maps.app.goo.gl/dp23DpdcXa3aAFmD8
+
+تنويه:
+• فضلاً التواجد بالمطار الساعة 10:30 صباحاً
+• عند الوصول أمل التوجه للموظف حامل الشاخص باللون الأسود
+• سيتم دفع الهدي لكل الحجاج من قبل الحملة`
   }
 };
+
+// ================================================================
+// Load message overrides from Firestore (non-blocking)
+// Admin can edit per-flight notes via the admin panel → flight_messages collection
+// ================================================================
+function loadFlightOverrides() {
+  if (!db) return;
+  db.collection("flight_messages").get().then(snap => {
+    snap.forEach(doc => {
+      const flight = doc.id;
+      if (!FLIGHTS[flight]) return;
+      const d = doc.data();
+      if (d.notes && Array.isArray(d.notes) && d.notes.length) {
+        FLIGHTS[flight].notes = d.notes;
+      }
+      if (d.details && typeof d.details === "object") {
+        Object.assign(FLIGHTS[flight].details, d.details);
+      }
+      if (d.plainTextBody) {
+        const orig = FLIGHTS[flight].plainText;
+        FLIGHTS[flight].plainText = (name, gender) => {
+          const salutation = gender === 'انثى' ? 'أختي الحاجة' : 'أخي الحاج';
+          return `${salutation} / ${name}\n\n${d.plainTextBody}`;
+        };
+      }
+    });
+  }).catch(() => {}); // silent — overrides are optional
+}
+loadFlightOverrides();
 
 // ================================================================
 const resultArea = document.getElementById("resultArea");
