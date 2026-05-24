@@ -242,12 +242,15 @@
       display: inline-block; background: #f59e0b; color: #fff;
       font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: bold;
     }
-    .btn-del-pilgrim {
-      background: #fde8e8; color: #c62828; border: 1px solid #f5c6c6;
-      border-radius: 7px; padding: 5px 10px; font-family: inherit; font-size: 12px;
+    .row-actions { display: flex; gap: 6px; }
+    .btn-del-pilgrim, .btn-edit-pilgrim {
+      border-radius: 7px; padding: 5px 9px; font-family: inherit; font-size: 13px;
       font-weight: bold; cursor: pointer; white-space: nowrap; transition: background .15s;
     }
+    .btn-del-pilgrim { background: #fde8e8; color: #c62828; border: 1px solid #f5c6c6; }
     .btn-del-pilgrim:hover { background: #c62828; color: #fff; border-color: #c62828; }
+    .btn-edit-pilgrim { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+    .btn-edit-pilgrim:hover { background: #1565c0; color: #fff; border-color: #1565c0; }
 
     /* ── Tabs ── */
     .tab-bar {
@@ -487,7 +490,7 @@
 <!-- ══ Add Pilgrim Modal ══ -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
   <div class="modal-box">
-    <div class="modal-title">➕ إضافة حاج يدوياً</div>
+    <div class="modal-title" id="modalTitle">➕ إضافة حاج يدوياً</div>
 
     <div class="form-field">
       <label>الاسم الكامل</label>
@@ -758,9 +761,12 @@ function renderTable(data) {
       ? `<span class="badge b-noshow">لم يستفسر</span>`
       : `<span class="badge b-searched">استفسر ✓</span>`;
     const bc = flightBadge[p.flight] || "";
-    // Manual pilgrims (from Firebase) can be deleted; CSV pilgrims show a lock
+    // Manual pilgrims (from Firebase) can be edited/deleted; CSV pilgrims are file-managed
     const action = p.manual
-      ? `<button class="btn-del-pilgrim" onclick="deletePilgrim('${esc(p.id)}','${esc(p.name)}')" title="حذف الإضافة اليدوية">🗑️ حذف</button>`
+      ? `<div class="row-actions">
+           <button class="btn-edit-pilgrim" onclick="openEditModal('${esc(p.id)}')" title="تعديل">✏️</button>
+           <button class="btn-del-pilgrim" onclick="deletePilgrim('${esc(p.id)}','${esc(p.name)}')" title="حذف">🗑️</button>
+         </div>`
       : `<span style="color:#ccc;font-size:11px">من الملف</span>`;
     return `<tr class="${noshow ? "row-noshow" : ""}">
       <td>${i+1}</td>
@@ -859,14 +865,38 @@ function esc(s) {
 }
 
 // ── Modal ────────────────────────────────────────────────────────
+let _editingId = null; // null = add mode; otherwise the original ID being edited
+
 function openModal() {
+  _editingId = null;
+  document.getElementById("modalTitle").textContent = "➕ إضافة حاج يدوياً";
   document.getElementById("f_name").value   = "";
   document.getElementById("f_id").value     = "";
+  document.getElementById("f_id").disabled  = false;
   document.getElementById("f_gender").value = "ذكر";
   document.getElementById("f_flight").value = "SV8035";
   document.getElementById("modalMsg").textContent = "";
   document.getElementById("modalMsg").className   = "modal-msg";
   document.getElementById("btnSavePilgrim").disabled = false;
+  document.getElementById("btnSavePilgrim").textContent = "حفظ";
+  document.getElementById("modalOverlay").classList.add("open");
+  document.getElementById("f_name").focus();
+}
+
+function openEditModal(id) {
+  const p = allPilgrims.find(x => x.id === id && x.manual);
+  if (!p) { alert("لا يمكن تعديل هذا الحاج (مصدره الملف وليس الإضافة اليدوية)."); return; }
+  _editingId = id;
+  document.getElementById("modalTitle").textContent = "✏️ تعديل حاج";
+  document.getElementById("f_name").value   = p.name;
+  document.getElementById("f_id").value     = p.id;
+  document.getElementById("f_id").disabled  = false; // ID editable too
+  document.getElementById("f_gender").value = p.gender === "انثى" ? "انثى" : "ذكر";
+  document.getElementById("f_flight").value = p.flight;
+  document.getElementById("modalMsg").textContent = "";
+  document.getElementById("modalMsg").className   = "modal-msg";
+  document.getElementById("btnSavePilgrim").disabled = false;
+  document.getElementById("btnSavePilgrim").textContent = "حفظ التعديل";
   document.getElementById("modalOverlay").classList.add("open");
   document.getElementById("f_name").focus();
 }
@@ -972,37 +1002,58 @@ function savePilgrim() {
   const gender = document.getElementById("f_gender").value;
   const flight = document.getElementById("f_flight").value;
   const msg    = document.getElementById("modalMsg");
+  const btn    = document.getElementById("btnSavePilgrim");
+  const isEdit = _editingId !== null;
 
-  if (!name)              { msg.textContent = "أدخل الاسم.";          msg.className = "modal-msg err"; return; }
-  if (!/^\d{8,12}$/.test(id)) { msg.textContent = "رقم الهوية غير صحيح."; msg.className = "modal-msg err"; return; }
+  if (!name)                  { msg.textContent = "أدخل الاسم.";            msg.className = "modal-msg err"; return; }
+  if (!/^\d{8,12}$/.test(id)) { msg.textContent = "رقم الهوية غير صحيح.";   msg.className = "modal-msg err"; return; }
 
-  // check duplicate
-  const exists = allPilgrims.find(p => p.id === id);
+  // duplicate check — ignore the record being edited itself
+  const exists = allPilgrims.find(p => p.id === id && p.id !== _editingId);
   if (exists) { msg.textContent = `الهوية موجودة مسبقاً: ${exists.name}`; msg.className = "modal-msg err"; return; }
 
-  const btn = document.getElementById("btnSavePilgrim");
   btn.disabled = true;
   btn.textContent = "جاري الحفظ…";
 
-  db.collection("manual_pilgrims").doc(id).set({ id, name, gender, flight, addedAt: firebase.firestore.FieldValue.serverTimestamp() })
-    .then(() => {
-      msg.textContent = `✅ تم إضافة ${name} بنجاح`;
-      msg.className   = "modal-msg ok";
-      btn.textContent = "حفظ";
-      // add locally without full reload
+  const data = { id, name, gender, flight, addedAt: firebase.firestore.FieldValue.serverTimestamp() };
+
+  // If editing and the ID changed, the Firestore doc id (=ID) must move:
+  // delete the old doc then create the new one.
+  const idChanged = isEdit && id !== _editingId;
+  const writeOp = idChanged
+    ? db.collection("manual_pilgrims").doc(_editingId).delete()
+        .then(() => db.collection("manual_pilgrims").doc(id).set(data))
+    : db.collection("manual_pilgrims").doc(id).set(data, { merge: true });
+
+  writeOp.then(() => {
+    msg.textContent = isEdit ? `✅ تم تعديل ${name} بنجاح` : `✅ تم إضافة ${name} بنجاح`;
+    msg.className   = "modal-msg ok";
+    btn.textContent = isEdit ? "حفظ التعديل" : "حفظ";
+
+    if (isEdit) {
+      // update local record in place (keep existing search log)
+      const apply = arr => {
+        const rec = arr.find(p => p.id === _editingId && p.manual);
+        if (rec) { rec.id = id; rec.name = name; rec.gender = gender; rec.flight = flight; }
+      };
+      apply(allPilgrims); apply(mergedData);
+    } else {
       const newPilgrim = { id, name, gender, flight, manual: true, log: null };
       allPilgrims.push(newPilgrim);
       mergedData.push(newPilgrim);
-      applyFilters();
-      setTimeout(closeModal, 1200);
-    })
-    .catch(err => {
-      console.error(err);
-      msg.textContent = "حدث خطأ أثناء الحفظ.";
-      msg.className   = "modal-msg err";
-      btn.disabled    = false;
-      btn.textContent = "حفظ";
-    });
+    }
+    applyFilters();
+    renderStats();
+    setTimeout(closeModal, 1000);
+  }).catch(err => {
+    console.error(err);
+    msg.textContent = err.code === "resource-exhausted"
+      ? "تجاوز حد Firebase اليومي — حاول لاحقاً."
+      : "حدث خطأ أثناء الحفظ.";
+    msg.className   = "modal-msg err";
+    btn.disabled    = false;
+    btn.textContent = isEdit ? "حفظ التعديل" : "حفظ";
+  });
 }
 </script>
 </body>
