@@ -242,6 +242,10 @@
       display: inline-block; background: #f59e0b; color: #fff;
       font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: bold;
     }
+    .edited-tag {
+      display: inline-block; background: #1565c0; color: #fff;
+      font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: bold;
+    }
     .row-actions { display: flex; gap: 6px; }
     .btn-del-pilgrim, .btn-edit-pilgrim {
       border-radius: 7px; padding: 5px 9px; font-family: inherit; font-size: 13px;
@@ -591,10 +595,12 @@ function loadData() {
     // ② Firebase بالتوازي — لا يوقف الـ CSV إذا بطّأ
     Promise.all([
       loadManualPilgrims().catch(() => []),
-      loadFirebase().catch(() => ({}))
-    ]).then(([manualPilgrims, logs]) => {
+      loadFirebase().catch(() => ({})),
+      loadOverrides().catch(() => ({}))
+    ]).then(([manualPilgrims, logs, overrides]) => {
       searchLogs  = logs;
-      allPilgrims = [...csvPilgrims, ...manualPilgrims];
+      const visibleCsv = applyOverrides(csvPilgrims, overrides);
+      allPilgrims = [...visibleCsv, ...manualPilgrims];
       mergedData  = allPilgrims.map(p => ({ ...p, log: logs[p.id] || null }));
       renderStats();
       applyFilters();
@@ -642,6 +648,33 @@ function loadManualPilgrims() {
     });
     return result;
   });
+}
+
+// تعديلات الحجاج من الملف (CSV) محفوظة في مجموعة overrides
+function loadOverrides() {
+  return db.collection("overrides").get().then(snap => {
+    const o = {};
+    snap.forEach(doc => { o[doc.id] = doc.data(); });
+    return o;
+  });
+}
+
+// تطبيق التعديلات/الحذف فوق بيانات الملف
+function applyOverrides(csvPilgrims, overrides) {
+  const result = [];
+  csvPilgrims.forEach(p => {
+    const o = overrides[p.id];
+    if (!o) { result.push(p); return; }
+    if (o.deleted) return; // محذوف — يُخفى
+    result.push({
+      ...p,
+      name:   o.name   !== undefined ? o.name   : p.name,
+      gender: o.gender !== undefined ? o.gender : p.gender,
+      flight: o.flight !== undefined ? o.flight : p.flight,
+      edited: true
+    });
+  });
+  return result;
 }
 
 function loadFirebase() {
@@ -761,16 +794,16 @@ function renderTable(data) {
       ? `<span class="badge b-noshow">لم يستفسر</span>`
       : `<span class="badge b-searched">استفسر ✓</span>`;
     const bc = flightBadge[p.flight] || "";
-    // Manual pilgrims (from Firebase) can be edited/deleted; CSV pilgrims are file-managed
-    const action = p.manual
-      ? `<div class="row-actions">
+    // كل الحجاج (يدوي + من الملف) قابلون للتعديل والحذف
+    const action = `<div class="row-actions">
            <button class="btn-edit-pilgrim" onclick="openEditModal('${esc(p.id)}')" title="تعديل">✏️</button>
            <button class="btn-del-pilgrim" onclick="deletePilgrim('${esc(p.id)}','${esc(p.name)}')" title="حذف">🗑️</button>
-         </div>`
-      : `<span style="color:#ccc;font-size:11px">من الملف</span>`;
+         </div>`;
+    const tag = p.manual ? ' <span class="manual-tag">يدوي</span>'
+              : p.edited ? ' <span class="edited-tag">معدّل</span>' : '';
     return `<tr class="${noshow ? "row-noshow" : ""}">
       <td>${i+1}</td>
-      <td>${esc(p.name)}${p.manual ? ' <span class="manual-tag">يدوي</span>' : ''}</td>
+      <td>${esc(p.name)}${tag}</td>
       <td>${esc(p.id)}</td>
       <td>${p.gender === "انثى" ? "أنثى" : "ذكر"}</td>
       <td><span class="badge ${bc}">${esc(p.flight)}</span></td>
@@ -791,23 +824,31 @@ function renderTable(data) {
   document.getElementById("searchTable").innerHTML = rows + footer;
 }
 
-// ── Delete manual pilgrim ─────────────────────────────────────────
+// ── Delete pilgrim (manual or from-file) ──────────────────────────
 function deletePilgrim(id, name) {
-  if (!confirm(`حذف الحاج المُضاف يدوياً؟\n\n${name}\nالهوية: ${id}\n\nلا يمكن التراجع.`)) return;
-  db.collection("manual_pilgrims").doc(id).delete()
-    .then(() => {
-      // remove locally without full reload
-      allPilgrims = allPilgrims.filter(p => !(p.id === id && p.manual));
-      mergedData  = mergedData.filter(p => !(p.id === id && p.manual));
-      applyFilters();
-      renderStats();
-    })
-    .catch(err => {
-      console.error(err);
-      alert("تعذّر الحذف: " + (err.code === "resource-exhausted"
-        ? "تجاوز حد Firebase اليومي — حاول لاحقاً بعد تجدد الحصة."
-        : err.message));
-    });
+  const p = allPilgrims.find(x => x.id === id);
+  const isManual = p && p.manual;
+  const src = isManual ? "المُضاف يدوياً" : "(من الملف)";
+  if (!confirm(`حذف الحاج ${src}؟\n\n${name}\nالهوية: ${id}\n\nلا يمكن التراجع بسهولة.`)) return;
+
+  // Manual → delete the Firestore doc. From-file → mark deleted in overrides.
+  const op = isManual
+    ? db.collection("manual_pilgrims").doc(id).delete()
+    : db.collection("overrides").doc(id).set(
+        { deleted: true, editedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true });
+
+  op.then(() => {
+    allPilgrims = allPilgrims.filter(p => p.id !== id);
+    mergedData  = mergedData.filter(p => p.id !== id);
+    applyFilters();
+    renderStats();
+  }).catch(err => {
+    console.error(err);
+    alert("تعذّر الحذف: " + (err.code === "resource-exhausted"
+      ? "تجاوز حد Firebase اليومي — حاول لاحقاً بعد تجدد الحصة."
+      : err.message));
+  });
 }
 
 // ── Export helpers ───────────────────────────────────────────────
@@ -865,10 +906,12 @@ function esc(s) {
 }
 
 // ── Modal ────────────────────────────────────────────────────────
-let _editingId = null; // null = add mode; otherwise the original ID being edited
+let _editingId = null;       // null = add mode; otherwise the original ID being edited
+let _editingSource = null;   // 'manual' | 'csv'
 
 function openModal() {
   _editingId = null;
+  _editingSource = null;
   document.getElementById("modalTitle").textContent = "➕ إضافة حاج يدوياً";
   document.getElementById("f_name").value   = "";
   document.getElementById("f_id").value     = "";
@@ -884,10 +927,12 @@ function openModal() {
 }
 
 function openEditModal(id) {
-  const p = allPilgrims.find(x => x.id === id && x.manual);
-  if (!p) { alert("لا يمكن تعديل هذا الحاج (مصدره الملف وليس الإضافة اليدوية)."); return; }
+  const p = allPilgrims.find(x => x.id === id);
+  if (!p) { alert("تعذّر العثور على الحاج."); return; }
   _editingId = id;
-  document.getElementById("modalTitle").textContent = "✏️ تعديل حاج";
+  _editingSource = p.manual ? 'manual' : 'csv';
+  document.getElementById("modalTitle").textContent =
+    "✏️ تعديل حاج" + (p.manual ? " (يدوي)" : " (من الملف)");
   document.getElementById("f_name").value   = p.name;
   document.getElementById("f_id").value     = p.id;
   document.getElementById("f_id").disabled  = false; // ID editable too
@@ -1015,32 +1060,52 @@ function savePilgrim() {
   btn.disabled = true;
   btn.textContent = "جاري الحفظ…";
 
-  const data = { id, name, gender, flight, addedAt: firebase.firestore.FieldValue.serverTimestamp() };
-
-  // If editing and the ID changed, the Firestore doc id (=ID) must move:
-  // delete the old doc then create the new one.
+  const ts = firebase.firestore.FieldValue.serverTimestamp();
+  const data = { id, name, gender, flight, addedAt: ts };
   const idChanged = isEdit && id !== _editingId;
-  const writeOp = idChanged
-    ? db.collection("manual_pilgrims").doc(_editingId).delete()
-        .then(() => db.collection("manual_pilgrims").doc(id).set(data))
-    : db.collection("manual_pilgrims").doc(id).set(data, { merge: true });
+
+  let writeOp;
+  if (!isEdit) {
+    // إضافة جديدة → حاج يدوي
+    writeOp = db.collection("manual_pilgrims").doc(id).set(data);
+  } else if (_editingSource === 'manual') {
+    // تعديل حاج يدوي — نقل المستند إذا تغيّرت الهوية
+    writeOp = idChanged
+      ? db.collection("manual_pilgrims").doc(_editingId).delete()
+          .then(() => db.collection("manual_pilgrims").doc(id).set(data))
+      : db.collection("manual_pilgrims").doc(id).set(data, { merge: true });
+  } else {
+    // تعديل حاج من الملف (CSV)
+    if (idChanged) {
+      // تغيّرت الهوية → إخفاء الأصل في overrides + إنشاء سجل يدوي بالهوية الجديدة
+      writeOp = db.collection("overrides").doc(_editingId).set({ deleted: true, editedAt: ts }, { merge: true })
+        .then(() => db.collection("manual_pilgrims").doc(id).set(data));
+    } else {
+      // نفس الهوية → حفظ التعديل كـ override فوق الملف
+      writeOp = db.collection("overrides").doc(id).set({ name, gender, flight, deleted: false, editedAt: ts }, { merge: true });
+    }
+  }
 
   writeOp.then(() => {
     msg.textContent = isEdit ? `✅ تم تعديل ${name} بنجاح` : `✅ تم إضافة ${name} بنجاح`;
     msg.className   = "modal-msg ok";
     btn.textContent = isEdit ? "حفظ التعديل" : "حفظ";
 
-    if (isEdit) {
-      // update local record in place (keep existing search log)
-      const apply = arr => {
-        const rec = arr.find(p => p.id === _editingId && p.manual);
-        if (rec) { rec.id = id; rec.name = name; rec.gender = gender; rec.flight = flight; }
-      };
-      apply(allPilgrims); apply(mergedData);
+    if (!isEdit) {
+      const np = { id, name, gender, flight, manual: true, log: null };
+      allPilgrims.push(np); mergedData.push(np);
+    } else if (idChanged) {
+      allPilgrims = allPilgrims.filter(p => p.id !== _editingId);
+      mergedData  = mergedData.filter(p => p.id !== _editingId);
+      const np = { id, name, gender, flight, manual: true, log: searchLogs[id] || null };
+      allPilgrims.push(np); mergedData.push(np);
     } else {
-      const newPilgrim = { id, name, gender, flight, manual: true, log: null };
-      allPilgrims.push(newPilgrim);
-      mergedData.push(newPilgrim);
+      // same id: patch in place
+      const patch = arr => {
+        const rec = arr.find(p => p.id === id);
+        if (rec) { rec.name = name; rec.gender = gender; rec.flight = flight; if (_editingSource === 'csv') rec.edited = true; }
+      };
+      patch(allPilgrims); patch(mergedData);
     }
     applyFilters();
     renderStats();

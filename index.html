@@ -453,32 +453,28 @@ function doSearch() {
       const found = results.data.find(r => String(r.id).trim() === idValue);
 
       if (found) {
-        // found in CSV
-        const name   = found.name   || "";
-        const gender = found.gender || "";
-        const flight = (found.flight || "").trim().replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-        if (!FLIGHTS[flight]) { errorDiv.textContent = `تنبيه: الرحلة غير مدعومة.`; return; }
-        currentRecord = { ...found, flightKey: flight };
-        renderCard(name, gender, flight);
-        logSearch(idValue, name, gender, flight);
+        // وُجد في الملف — تحقق من وجود تعديل/حذف في overrides
+        if (db) {
+          db.collection("overrides").doc(idValue).get().then(doc => {
+            if (doc.exists && doc.data().deleted) {
+              // محذوف من الملف → جرّب الإضافات اليدوية ثم لا شيء
+              checkManualPilgrim(idValue);
+              return;
+            }
+            const o = doc.exists ? doc.data() : {};
+            showRecord(idValue,
+              o.name   !== undefined ? o.name   : (found.name   || ""),
+              o.gender !== undefined ? o.gender : (found.gender || ""),
+              o.flight !== undefined ? o.flight : (found.flight || ""));
+          }).catch(() => {
+            // خطأ/تجاوز حصة → استخدم بيانات الملف كما هي
+            showRecord(idValue, found.name || "", found.gender || "", found.flight || "");
+          });
+        } else {
+          showRecord(idValue, found.name || "", found.gender || "", found.flight || "");
+        }
       } else if (db) {
-        // check manually-added pilgrims in Firestore
-        db.collection("manual_pilgrims").doc(idValue).get().then(doc => {
-          if (!doc.exists) {
-            errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
-            return;
-          }
-          const d      = doc.data();
-          const name   = d.name   || "";
-          const gender = d.gender || "";
-          const flight = (d.flight || "").replace(/[^A-Za-z0-9]/g,"").toUpperCase();
-          if (!FLIGHTS[flight]) { errorDiv.textContent = `تنبيه: الرحلة غير مدعومة.`; return; }
-          currentRecord = { id: idValue, name, gender, flightKey: flight };
-          renderCard(name, gender, flight);
-          logSearch(idValue, name, gender, flight);
-        }).catch(() => {
-          errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
-        });
+        checkManualPilgrim(idValue);
       } else {
         errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
       }
@@ -488,6 +484,30 @@ function doSearch() {
       searchBtn.innerHTML = "🔍&nbsp; بحث";
       errorDiv.textContent = "حدث خطأ أثناء قراءة ملف البيانات.";
     }
+  });
+}
+
+// عرض السجل بعد تطبيع رقم الرحلة
+function showRecord(id, name, gender, flightRaw) {
+  const flight = (flightRaw || "").trim().replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  if (!FLIGHTS[flight]) { errorDiv.textContent = "تنبيه: الرحلة غير مدعومة."; return; }
+  currentRecord = { id, name, gender, flightKey: flight };
+  renderCard(name, gender, flight);
+  logSearch(id, name, gender, flight);
+}
+
+// البحث في الحجاج المُضافين يدوياً (Firestore)
+function checkManualPilgrim(id) {
+  if (!db) { errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا."; return; }
+  db.collection("manual_pilgrims").doc(id).get().then(doc => {
+    if (!doc.exists) {
+      errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
+      return;
+    }
+    const d = doc.data();
+    showRecord(id, d.name || "", d.gender || "", d.flight || "");
+  }).catch(() => {
+    errorDiv.textContent = "عذراً: لم يتم العثور على بيانات لرقم الهوية هذا.";
   });
 }
 
