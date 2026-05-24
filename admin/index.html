@@ -238,6 +238,17 @@
     .b-searched { background: #E8F5E9; color: #2e7d32; }
     .b-noshow   { background: #FFF3E0; color: #e65100; }
 
+    .manual-tag {
+      display: inline-block; background: #f59e0b; color: #fff;
+      font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: bold;
+    }
+    .btn-del-pilgrim {
+      background: #fde8e8; color: #c62828; border: 1px solid #f5c6c6;
+      border-radius: 7px; padding: 5px 10px; font-family: inherit; font-size: 12px;
+      font-weight: bold; cursor: pointer; white-space: nowrap; transition: background .15s;
+    }
+    .btn-del-pilgrim:hover { background: #c62828; color: #fff; border-color: #c62828; }
+
     /* ── Tabs ── */
     .tab-bar {
       display: flex; gap: 6px; margin-bottom: 20px;
@@ -451,10 +462,11 @@
               <th>عدد مرات الاستفسار</th>
               <th>أول استفسار</th>
               <th>آخر استفسار</th>
+              <th>إجراء</th>
             </tr>
           </thead>
           <tbody id="searchTable">
-            <tr><td colspan="9" class="loading">جاري تحميل البيانات…</td></tr>
+            <tr><td colspan="10" class="loading">جاري تحميل البيانات…</td></tr>
           </tbody>
         </table>
       </div>
@@ -564,7 +576,7 @@ if (sessionStorage.getItem("haj_admin") === "1") showDashboard();
 // ── Load ─────────────────────────────────────────────────────────
 function loadData() {
   document.getElementById("searchTable").innerHTML =
-    '<tr><td colspan="9" class="loading">جاري تحميل البيانات…</td></tr>';
+    '<tr><td colspan="10" class="loading">جاري تحميل البيانات…</td></tr>';
   document.getElementById("lastUpdated").textContent = "";
 
   // ① CSV أولاً — مستقل تماماً عن Firebase
@@ -593,7 +605,7 @@ function loadData() {
   }).catch(err => {
     console.error("CSV load failed:", err);
     document.getElementById("searchTable").innerHTML =
-      '<tr><td colspan="9" class="loading">حدث خطأ في تحميل بيانات الحجاج.</td></tr>';
+      '<tr><td colspan="10" class="loading">حدث خطأ في تحميل بيانات الحجاج.</td></tr>';
   });
 }
 
@@ -733,7 +745,7 @@ function applyFilters() {
 function renderTable(data) {
   if (!data.length) {
     document.getElementById("searchTable").innerHTML =
-      '<tr><td colspan="9" class="loading">لا توجد نتائج مطابقة.</td></tr>';
+      '<tr><td colspan="10" class="loading">لا توجد نتائج مطابقة.</td></tr>';
     return;
   }
 
@@ -746,9 +758,13 @@ function renderTable(data) {
       ? `<span class="badge b-noshow">لم يستفسر</span>`
       : `<span class="badge b-searched">استفسر ✓</span>`;
     const bc = flightBadge[p.flight] || "";
+    // Manual pilgrims (from Firebase) can be deleted; CSV pilgrims show a lock
+    const action = p.manual
+      ? `<button class="btn-del-pilgrim" onclick="deletePilgrim('${esc(p.id)}','${esc(p.name)}')" title="حذف الإضافة اليدوية">🗑️ حذف</button>`
+      : `<span style="color:#ccc;font-size:11px">من الملف</span>`;
     return `<tr class="${noshow ? "row-noshow" : ""}">
       <td>${i+1}</td>
-      <td>${esc(p.name)}</td>
+      <td>${esc(p.name)}${p.manual ? ' <span class="manual-tag">يدوي</span>' : ''}</td>
       <td>${esc(p.id)}</td>
       <td>${p.gender === "انثى" ? "أنثى" : "ذكر"}</td>
       <td><span class="badge ${bc}">${esc(p.flight)}</span></td>
@@ -756,16 +772,36 @@ function renderTable(data) {
       <td>${count}</td>
       <td>${fmtDate(p.log?.firstSearch)}</td>
       <td>${fmtDate(p.log?.lastSearch)}</td>
+      <td>${action}</td>
     </tr>`;
   }).join("");
 
   const footer = data.length > DISPLAY_LIMIT
-    ? `<tr><td colspan="9" style="text-align:center;padding:12px;color:#888;font-size:13px;background:#fafafa">
+    ? `<tr><td colspan="10" style="text-align:center;padding:12px;color:#888;font-size:13px;background:#fafafa">
         يُعرض أول ${DISPLAY_LIMIT} من ${data.length} نتيجة — استخدم البحث لتضييق النتائج
        </td></tr>`
     : "";
 
   document.getElementById("searchTable").innerHTML = rows + footer;
+}
+
+// ── Delete manual pilgrim ─────────────────────────────────────────
+function deletePilgrim(id, name) {
+  if (!confirm(`حذف الحاج المُضاف يدوياً؟\n\n${name}\nالهوية: ${id}\n\nلا يمكن التراجع.`)) return;
+  db.collection("manual_pilgrims").doc(id).delete()
+    .then(() => {
+      // remove locally without full reload
+      allPilgrims = allPilgrims.filter(p => !(p.id === id && p.manual));
+      mergedData  = mergedData.filter(p => !(p.id === id && p.manual));
+      applyFilters();
+      renderStats();
+    })
+    .catch(err => {
+      console.error(err);
+      alert("تعذّر الحذف: " + (err.code === "resource-exhausted"
+        ? "تجاوز حد Firebase اليومي — حاول لاحقاً بعد تجدد الحصة."
+        : err.message));
+    });
 }
 
 // ── Export helpers ───────────────────────────────────────────────
